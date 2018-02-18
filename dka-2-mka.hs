@@ -10,55 +10,36 @@ import System.Console.GetOpt
 import Data.Maybe ( fromMaybe )
 
 data Options = Options
-	{ optVerbose     :: Bool
-	, optShowVersion :: Bool
-	, optOutput      :: Maybe FilePath
-	, optInput       :: Maybe FilePath
-	, optLibDirs     :: [FilePath]
+	{ 
+		optShowDKA  :: Maybe FilePath, 
+		optShowMKA	:: Maybe FilePath
 	} deriving Show
 
-defaultOptions    = Options
-	{ optVerbose     = False
-	, optShowVersion = False
-	, optOutput      = Nothing
-	, optInput       = Nothing
-	, optLibDirs     = []
+defaultOptions = Options
+	{
+		optShowDKA  = Just "STDOUT",
+		optShowMKA	= Just "STDOUT"
 	}
 
 options :: [OptDescr (Options -> Options)]
 options =
-	[ Option ['v']     ["verbose"]
-	    (NoArg (\ opts -> opts { optVerbose = True }))
-	    "chatty output on stderr"
-	, Option ['V','?'] ["version"]
-	    (NoArg (\ opts -> opts { optShowVersion = True }))
-	    "show version number"
-	, Option ['o']     ["output"]
-	    (OptArg ((\ f opts -> opts { optOutput = Just f }) . fromMaybe "output")
-	            "FILE")
-	    "output FILE"
-	, Option ['c']     []
-	    (OptArg ((\ f opts -> opts { optInput = Just f }) . fromMaybe "input")
-	            "FILE")
-	    "input FILE"
-	, Option ['L']     ["libdir"]
-	    (ReqArg (\ d opts -> opts { optLibDirs = optLibDirs opts ++ [d] }) "DIR")
-	    "library directory"
+	[ Option ['i']	[]
+	    (OptArg ((\ f opts -> opts { optShowDKA = Just f }) . fromMaybe "ShowDKA") "FILENAME")
+	    "Load and write DKA on file output or STDOUT."
+	, Option ['t'] []
+	    (OptArg ((\ f opts -> opts { optShowMKA = Just f }) . fromMaybe "ShowMKA") "FILENAME")
+	    "Load and transform DKA into MKA and write on file output or STDOUT."
 	]
 
 compilerOpts :: [String] -> IO (Options, [String])
 compilerOpts argv =
   case getOpt Permute options argv of
-     (o,n,[]  ) -> return (foldl (flip id) defaultOptions o, n)
+     (o,n,[]) -> return (foldl (flip id) defaultOptions o, n)
      (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
- where header = "Usage: ic [OPTION...] files..."
+ where header = "Usage: OPTION [FILENAME]"
 
 main = do
 	argv <- getArgs
-	print argv
 	(opts, fname) <- compilerOpts argv
 	print opts 
 	print fname
-	when (optShowVersion opts) $ do
-		putStrLn "VERSION"
-		exitSuccess
