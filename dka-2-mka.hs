@@ -7,7 +7,7 @@ import Data.Word
 import System.Environment
 import System.Exit
 import System.Console.GetOpt
-import Data.Maybe ( fromMaybe )
+import Data.Maybe
 
 data Options = Options
 	{ 
@@ -17,8 +17,8 @@ data Options = Options
 
 defaultOptions = Options
 	{
-		optShowDKA  = Just "STDOUT",
-		optShowMKA	= Just "STDOUT"
+		optShowDKA  = Nothing,
+		optShowMKA	= Nothing
 	}
 
 options :: [OptDescr (Options -> Options)]
@@ -33,13 +33,33 @@ options =
 
 compilerOpts :: [String] -> IO (Options, [String])
 compilerOpts argv =
-  case getOpt Permute options argv of
-     (o,n,[]) -> return (foldl (flip id) defaultOptions o, n)
-     (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
- where header = "Usage: OPTION [FILENAME]"
+ 	case getOpt Permute options argv of
+     	(o,n,[]) -> return (foldl (flip id) defaultOptions o, n)
+     	(_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
+ 	where header = "Usage: OPTION [FILENAME]"
 
 main = do
 	argv <- getArgs
 	(opts, fname) <- compilerOpts argv
 	print opts 
 	print fname
+
+	when (not $ isNothing $ optShowDKA opts) $ do
+		if null fname
+			then do
+				print "SHOWDKA STDOUT"
+				exitSuccess
+			else do
+				print "SHOWDKA FILE"
+				exitSuccess
+	when (not $ isNothing $ optShowMKA opts) $ do
+		if null fname
+			then do
+				print "SHOWMKA STDOUT"
+				exitSuccess
+			else do
+				print "SHOWDKA FILE"
+				exitSuccess
+
+	error "You need to specify one argument."
+	exitFailure
