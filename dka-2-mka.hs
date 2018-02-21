@@ -5,9 +5,13 @@ import Control.Monad.State
 import qualified Data.IntMap as M
 import Data.Word
 import System.Environment
+import System.Directory
 import System.Exit
 import System.Console.GetOpt
 import Data.Maybe
+import Data.Typeable
+
+import FileParser
 
 data Options = Options
 	{ 
@@ -38,22 +42,45 @@ compilerOpts argv =
      	(_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
  	where header = "Usage: OPTION [FILENAME]"
 
+-- Dlzka listu
+listnumber :: [String] -> Int 
+listnumber [] = 0
+listnumber (x:xs) = 1 + listnumber xs
+
 main = do
 	argv <- getArgs
-	(opts, fname) <- compilerOpts argv
+	(opts, filenames) <- compilerOpts argv
 	print opts 
-	print fname
+	print filenames
+
+	when (listnumber filenames > 1) $ do
+		print "TOO MUCH FILES"
+		error "Too much files."
+
+	when ((not $ isNothing $ optShowDKA opts) && (not $ isNothing $ optShowMKA opts)) $ do
+		if null filenames
+			then do
+				print "SHOWDKA, SHOWMKA STDOUT"
+				exitSuccess
+			else do
+				print "SHOWDKA, SHOWMKA FILE"
+				exitSuccess
 
 	when (not $ isNothing $ optShowDKA opts) $ do
-		if null fname
+		if null filenames
 			then do
 				print "SHOWDKA STDOUT"
 				exitSuccess
 			else do
 				print "SHOWDKA FILE"
+				let filename = head filenames
+				fileExist <- doesFileExist filename
+				lines <- fileParser (filename, fileExist)
+				print lines
 				exitSuccess
+
 	when (not $ isNothing $ optShowMKA opts) $ do
-		if null fname
+		if null filenames
 			then do
 				print "SHOWMKA STDOUT"
 				exitSuccess
