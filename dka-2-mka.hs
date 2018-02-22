@@ -74,9 +74,14 @@ main = do
 			else do
 				print "SHOWDKA FILE"
 				let filename = head filenames
-				fileExist <- doesFileExist filename
-				lines <- fileParser (filename, fileExist)
-				print lines
+				lines <- customFileParser filename
+				let customWords =  words lines
+				print $ typeOf customWords
+				let allStates = customWords !! 0
+				let startState = customWords !! 1
+				let endStates = customWords !! 2
+				let rules = drop 3 customWords
+				print (allStates, startState, endStates, rules)
 				exitSuccess
 
 	when (not $ isNothing $ optShowMKA opts) $ do
