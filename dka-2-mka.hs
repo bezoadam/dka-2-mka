@@ -10,6 +10,8 @@ import System.Exit
 import System.Console.GetOpt
 import Data.Maybe
 import Data.Typeable
+import Data.List.Split
+import Data.Char
 
 import FileParser
 
@@ -47,6 +49,29 @@ listnumber :: [String] -> Int
 listnumber [] = 0
 listnumber (x:xs) = 1 + listnumber xs
 
+-- Nacitanie DKA do vnutornej reprezentacie
+loadDKA :: [String] -> (String, String, String, [String])
+loadDKA customWords = (customWords !! 0, customWords !! 1, customWords !! 2, drop 3 customWords)
+
+-- Zistenie ci String je Integer
+isInteger s = case reads s :: [(Integer, String)] of
+  	[(_, "")] -> True
+  	_         -> False
+
+-- Kontrola spravneho formatu vsetkyh stavov
+checkAllStatesFormat :: String -> Bool
+checkAllStatesFormat states = all isInteger $ splitOn "," states
+
+-- Kontrola spravneho formatu pociatocneho stavu
+checkStartState :: String -> Bool
+checkStartState startState = if ((length $ splitOn "," startState) == 1)
+								then do 
+									let first = (splitOn "," startState) !! 0
+									if (isInteger $ first) then True
+										else False 
+								else False
+
+
 main = do
 	argv <- getArgs
 	(opts, filenames) <- compilerOpts argv
@@ -54,7 +79,6 @@ main = do
 	print filenames
 
 	when (listnumber filenames > 1) $ do
-		print "TOO MUCH FILES"
 		error "Too much files."
 
 	when ((not $ isNothing $ optShowDKA opts) && (not $ isNothing $ optShowMKA opts)) $ do
@@ -75,13 +99,10 @@ main = do
 				print "SHOWDKA FILE"
 				let filename = head filenames
 				lines <- customFileParser filename
-				let customWords =  words lines
-				print $ typeOf customWords
-				let allStates = customWords !! 0
-				let startState = customWords !! 1
-				let endStates = customWords !! 2
-				let rules = drop 3 customWords
+				let (allStates, startState, endStates, rules) = loadDKA $ words lines
 				print (allStates, startState, endStates, rules)
+				print $ checkAllStatesFormat allStates
+				print $ checkStartState startState
 				exitSuccess
 
 	when (not $ isNothing $ optShowMKA opts) $ do
