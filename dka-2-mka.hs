@@ -11,7 +11,6 @@ import System.Console.GetOpt
 import Data.Maybe
 import Data.Typeable
 import Data.List
-import Data.List.Split
 import Data.Char
 
 import FileParser
@@ -44,6 +43,15 @@ compilerOpts argv =
      	(o,n,[]) -> return (foldl (flip id) defaultOptions o, n)
      	(_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
  	where header = "Usage: OPTION [FILENAME]"
+
+------------------------------DKA PARSER----------------------------------
+
+-- Rozdeli String na zaklade delimetra
+wordsWhen     :: (Char -> Bool) -> String -> [String]
+wordsWhen p s =  case dropWhile p s of
+                      "" -> []
+                      s' -> w : wordsWhen p s''
+                            where (w, s'') = break p s'
 
 -- Dlzka listu
 listnumber :: [String] -> Int 
@@ -83,7 +91,7 @@ removeItemFromList a list = [x | x <- list, x /= a]
 -- Predikat na overenie ci je pravidlo v spravnom tvare
 checkRuleFormat :: [String] -> String -> Bool
 checkRuleFormat allStates rule = do
-							let ruleList = removeItemFromList "," $ splitOn "," rule
+							let ruleList = removeItemFromList "," $ wordsWhen (==',') rule
 							if (((length $ ruleList) == 3) && ((length $ ruleList !! 1) == 1))
 								then do
 									let startState = ruleList !! 0
@@ -96,11 +104,17 @@ checkRuleFormat allStates rule = do
 										else False
 							else False
 
+
 -- Skontroluje spravnost vsetkych stavov
 checkRules :: ([String], [String]) -> Bool
 checkRules (rules, allStatesList) = do
 							let checkRulePredicate = checkRuleFormat allStatesList
 							all (checkRulePredicate) rules 
+
+-------------------------------OUTPUT-------------------------------
+
+printStates :: [String] -> String
+printStates states = intercalate "," states
 
 main = do
 	argv <- getArgs
@@ -127,14 +141,19 @@ main = do
 				let filename = head filenames
 				lines <- customFileParser filename
 				let (allStates, startState, endStates, rules) = loadDKA $ words lines
-				let allStatesList = splitOn "," allStates
-				let startStateList = splitOn "," startState
-				let endStatesList = splitOn "," endStates
+				let allStatesList = wordsWhen (==',') allStates
+				let startStateList = wordsWhen (==',') startState
+				let endStatesList = wordsWhen (==',') endStates
 
 				if (checkStatesFormat allStatesList && checkStartState startStateList && 
 					checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
 					checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
 						print "Spravny DKA"
+						-- print (read "271" :: Integer)
+						putStrLn $ id printStates allStatesList
+						putStrLn $ id printStates startStateList
+						putStrLn $ id printStates endStatesList
+
 				else do
 					print "Chybny DKA"
 				exitSuccess
