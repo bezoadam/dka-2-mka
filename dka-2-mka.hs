@@ -116,6 +116,19 @@ checkRules (rules, allStatesList) = do
 printStates :: [String] -> String
 printStates states = intercalate "," states
 
+-------------------------------INPUT--------------------------------
+
+--Nacita vstup zo stdin
+getRules :: IO [String]
+getRules = go ""
+	where go contents = do
+		line <- getLine
+		if line == "q"
+			then return $ lines contents
+		else go (contents ++ line ++ "\n")
+
+-------------------------------MAIN---------------------------------
+
 main = do
 	argv <- getArgs
 	(opts, filenames) <- compilerOpts argv
@@ -135,7 +148,27 @@ main = do
 	when (not $ isNothing $ optShowDKA opts) $ do
 		if null filenames
 			then do
-				print "SHOWDKA STDOUT"
+				allStates <- getLine
+				startState <- getLine
+				endStates <- getLine
+				rules <- getRules
+				
+				let allStatesList = wordsWhen (==',') allStates
+				let startStateList = wordsWhen (==',') startState
+				let endStatesList = wordsWhen (==',') endStates
+
+				if (checkStatesFormat allStatesList && checkStartState startStateList && 
+					checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
+					checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
+						print "Spravny DKA"
+						putStrLn $ id printStates allStatesList
+						putStrLn $ id printStates startStateList
+						putStrLn $ id printStates endStatesList
+						mapM_ putStrLn $ id rules
+
+				else do
+					error "Chybny DKA"
+
 				exitSuccess
 			else do
 				let filename = head filenames
@@ -149,13 +182,13 @@ main = do
 					checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
 					checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
 						print "Spravny DKA"
-						-- print (read "271" :: Integer)
 						putStrLn $ id printStates allStatesList
 						putStrLn $ id printStates startStateList
 						putStrLn $ id printStates endStatesList
+						mapM_ putStrLn $ id rules
 
 				else do
-					print "Chybny DKA"
+					error "Chybny DKA"
 				exitSuccess
 
 	when (not $ isNothing $ optShowMKA opts) $ do
