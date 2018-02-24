@@ -105,8 +105,6 @@ checkRules (rules, allStatesList) = do
 main = do
 	argv <- getArgs
 	(opts, filenames) <- compilerOpts argv
-	print opts 
-	print filenames
 
 	when (listnumber filenames > 1) $ do
 		error "Too much files."
@@ -126,27 +124,19 @@ main = do
 				print "SHOWDKA STDOUT"
 				exitSuccess
 			else do
-				print "SHOWDKA FILE"
 				let filename = head filenames
 				lines <- customFileParser filename
 				let (allStates, startState, endStates, rules) = loadDKA $ words lines
 				let allStatesList = splitOn "," allStates
 				let startStateList = splitOn "," startState
 				let endStatesList = splitOn "," endStates
-				print (allStatesList, startStateList, endStatesList, rules)
 
-				print "Check all states format: "
-				print $ checkStatesFormat allStatesList
-				print "Check start state format"
-				print $ checkStartState startStateList
-				print "Check end states format"
-				print $ checkStatesFormat endStatesList
-				print "Check if start state is sub state"
-				print $ checkIfSublist (startStateList, allStatesList)
-				print "Check if end states are sub states"
-				print $ checkIfSublist (endStatesList, allStatesList)
-				print "Check rules format"
-				print $ checkRules (rules, allStatesList)
+				if (checkStatesFormat allStatesList && checkStartState startStateList && 
+					checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
+					checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
+						print "Spravny DKA"
+				else do
+					print "Chybny DKA"
 				exitSuccess
 
 	when (not $ isNothing $ optShowMKA opts) $ do
