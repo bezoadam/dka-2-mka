@@ -10,6 +10,7 @@ import System.Exit
 import System.Console.GetOpt
 import Data.Maybe
 import Data.Typeable
+import Data.List
 import Data.List.Split
 import Data.Char
 
@@ -58,19 +59,48 @@ isInteger s = case reads s :: [(Integer, String)] of
   	[(_, "")] -> True
   	_         -> False
 
--- Kontrola spravneho formatu vsetkyh stavov
-checkAllStatesFormat :: String -> Bool
-checkAllStatesFormat states = all isInteger $ splitOn "," states
+-- Kontrola spravneho formatu stavov
+checkStatesFormat :: [String] -> Bool
+checkStatesFormat states = all isInteger $ states
 
 -- Kontrola spravneho formatu pociatocneho stavu
-checkStartState :: String -> Bool
-checkStartState startState = if ((length $ splitOn "," startState) == 1)
+checkStartState :: [String] -> Bool
+checkStartState startState = if ((length $ startState) == 1)
 								then do 
-									let first = (splitOn "," startState) !! 0
+									let first = startState !! 0
 									if (isInteger $ first) then True
 										else False 
 								else False
 
+-- Kontrola ci dane stavy sa nachadzaju vo vsetkych stavoch
+checkIfSublist :: ([String], [String]) -> Bool
+checkIfSublist (substates, states) =  isSubsequenceOf substates states
+
+-- Odstrani element z listu
+removeItemFromList :: Eq a => a -> [a] -> [a]
+removeItemFromList a list = [x | x <- list, x /= a]
+
+-- Predikat na overenie ci je pravidlo v spravnom tvare
+checkRuleFormat :: [String] -> String -> Bool
+checkRuleFormat allStates rule = do
+							let ruleList = removeItemFromList "," $ splitOn "," rule
+							if (((length $ ruleList) == 3) && ((length $ ruleList !! 1) == 1))
+								then do
+									let startState = ruleList !! 0
+									let symbol = head $ ruleList !! 1
+									let endState = ruleList !! 2
+									if (isInteger startState && isInteger endState && isAsciiLower symbol)
+										then do
+											if (elem startState allStates &&  elem endState allStates) then True
+												else False
+										else False
+							else False
+
+-- Skontroluje spravnost vsetkych stavov
+checkRules :: ([String], [String]) -> Bool
+checkRules (rules, allStatesList) = do
+							let checkRulePredicate = checkRuleFormat allStatesList
+							all (checkRulePredicate) rules 
 
 main = do
 	argv <- getArgs
@@ -100,9 +130,23 @@ main = do
 				let filename = head filenames
 				lines <- customFileParser filename
 				let (allStates, startState, endStates, rules) = loadDKA $ words lines
-				print (allStates, startState, endStates, rules)
-				print $ checkAllStatesFormat allStates
-				print $ checkStartState startState
+				let allStatesList = splitOn "," allStates
+				let startStateList = splitOn "," startState
+				let endStatesList = splitOn "," endStates
+				print (allStatesList, startStateList, endStatesList, rules)
+
+				print "Check all states format: "
+				print $ checkStatesFormat allStatesList
+				print "Check start state format"
+				print $ checkStartState startStateList
+				print "Check end states format"
+				print $ checkStatesFormat endStatesList
+				print "Check if start state is sub state"
+				print $ checkIfSublist (startStateList, allStatesList)
+				print "Check if end states are sub states"
+				print $ checkIfSublist (endStatesList, allStatesList)
+				print "Check rules format"
+				print $ checkRules (rules, allStatesList)
 				exitSuccess
 
 	when (not $ isNothing $ optShowMKA opts) $ do
