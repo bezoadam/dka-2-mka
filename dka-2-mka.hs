@@ -8,12 +8,15 @@ import System.Environment
 import System.Directory
 import System.Exit
 import System.Console.GetOpt
+import System.IO
 import Data.Maybe
 import Data.Typeable
 import Data.List
 import Data.Char
 
 import FileParser
+
+-------------------------------ARGUMENT PARSER----------------------------------
 
 data Options = Options
 	{ 
@@ -59,8 +62,8 @@ listnumber [] = 0
 listnumber (x:xs) = 1 + listnumber xs
 
 -- Nacitanie DKA do vnutornej reprezentacie
-loadDKA :: [String] -> (String, String, String, [String])
-loadDKA customWords = (customWords !! 0, customWords !! 1, customWords !! 2, drop 3 customWords)
+loadDKA :: [String] -> ([String], [String], [String], [String])
+loadDKA customWords = (wordsWhen (==',') $ customWords !! 0, wordsWhen (==',') $ customWords !! 1, wordsWhen (==',') $ customWords !! 2, drop 3 customWords)
 
 -- Zistenie ci String je Integer
 isInteger s = case reads s :: [(Integer, String)] of
@@ -109,7 +112,14 @@ checkRuleFormat allStates rule = do
 checkRules :: ([String], [String]) -> Bool
 checkRules (rules, allStatesList) = do
 							let checkRulePredicate = checkRuleFormat allStatesList
-							all (checkRulePredicate) rules 
+							all (checkRulePredicate) rules
+
+isDKAValid :: ([String], [String], [String], [String]) -> Bool
+isDKAValid (allStatesList, startStateList, endStatesList, rules) = do
+																if (checkStatesFormat allStatesList && checkStartState startStateList && 
+																	checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
+																	checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then True
+																else False
 
 -------------------------------OUTPUT-------------------------------
 
@@ -122,10 +132,16 @@ printStates states = intercalate "," states
 getRules :: IO [String]
 getRules = go ""
 	where go contents = do
-		line <- getLine
-		if line == "q"
+		done <- isEOF
+		if done 
 			then return $ lines contents
-		else go (contents ++ line ++ "\n")
+		else do
+			line <- getLine
+			go (contents ++ line ++ "\n")
+
+------------------------------MINIMALISATION----------------------------
+
+
 
 -------------------------------MAIN---------------------------------
 
@@ -157,39 +173,29 @@ main = do
 				let startStateList = wordsWhen (==',') startState
 				let endStatesList = wordsWhen (==',') endStates
 
-				if (checkStatesFormat allStatesList && checkStartState startStateList && 
-					checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
-					checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
-						print "Spravny DKA"
-						putStrLn $ id printStates allStatesList
-						putStrLn $ id printStates startStateList
-						putStrLn $ id printStates endStatesList
-						mapM_ putStrLn $ id rules
-
+				if (isDKAValid (allStatesList, startStateList, endStatesList, rules)) then do
+					print "Spravny DKA"
+					putStrLn $ id printStates allStatesList
+					putStrLn $ id printStates startStateList
+					putStrLn $ id printStates endStatesList
+					mapM_ putStrLn $ id rules
+					exitSuccess
 				else do
 					error "Chybny DKA"
-
-				exitSuccess
 			else do
 				let filename = head filenames
 				lines <- customFileParser filename
-				let (allStates, startState, endStates, rules) = loadDKA $ words lines
-				let allStatesList = wordsWhen (==',') allStates
-				let startStateList = wordsWhen (==',') startState
-				let endStatesList = wordsWhen (==',') endStates
+				let (allStatesList, startStateList, endStatesList, rules) = loadDKA $ words lines
 
-				if (checkStatesFormat allStatesList && checkStartState startStateList && 
-					checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
-					checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
-						print "Spravny DKA"
-						putStrLn $ id printStates allStatesList
-						putStrLn $ id printStates startStateList
-						putStrLn $ id printStates endStatesList
-						mapM_ putStrLn $ id rules
-
+				if (isDKAValid (allStatesList, startStateList, endStatesList, rules)) then do
+					print "Spravny DKA"
+					putStrLn $ id printStates allStatesList
+					putStrLn $ id printStates startStateList
+					putStrLn $ id printStates endStatesList
+					mapM_ putStrLn $ id rules
+					exitSuccess
 				else do
 					error "Chybny DKA"
-				exitSuccess
 
 	when (not $ isNothing $ optShowMKA opts) $ do
 		if null filenames
