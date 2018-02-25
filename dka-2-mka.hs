@@ -5,9 +5,15 @@ import Control.Monad.State
 import qualified Data.IntMap as M
 import Data.Word
 import System.Environment
+import System.Directory
 import System.Exit
 import System.Console.GetOpt
 import Data.Maybe
+import Data.Typeable
+import Data.List
+import Data.Char
+
+import FileParser
 
 data Options = Options
 	{ 
@@ -38,22 +44,155 @@ compilerOpts argv =
      	(_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
  	where header = "Usage: OPTION [FILENAME]"
 
+------------------------------DKA PARSER----------------------------------
+
+-- Rozdeli String na zaklade delimetra
+wordsWhen     :: (Char -> Bool) -> String -> [String]
+wordsWhen p s =  case dropWhile p s of
+                      "" -> []
+                      s' -> w : wordsWhen p s''
+                            where (w, s'') = break p s'
+
+-- Dlzka listu
+listnumber :: [String] -> Int 
+listnumber [] = 0
+listnumber (x:xs) = 1 + listnumber xs
+
+-- Nacitanie DKA do vnutornej reprezentacie
+loadDKA :: [String] -> (String, String, String, [String])
+loadDKA customWords = (customWords !! 0, customWords !! 1, customWords !! 2, drop 3 customWords)
+
+-- Zistenie ci String je Integer
+isInteger s = case reads s :: [(Integer, String)] of
+  	[(_, "")] -> True
+  	_         -> False
+
+-- Kontrola spravneho formatu stavov
+checkStatesFormat :: [String] -> Bool
+checkStatesFormat states = all isInteger $ states
+
+-- Kontrola spravneho formatu pociatocneho stavu
+checkStartState :: [String] -> Bool
+checkStartState startState = if ((length $ startState) == 1)
+								then do 
+									let first = startState !! 0
+									if (isInteger $ first) then True
+										else False 
+								else False
+
+-- Kontrola ci dane stavy sa nachadzaju vo vsetkych stavoch
+checkIfSublist :: ([String], [String]) -> Bool
+checkIfSublist (substates, states) =  isSubsequenceOf substates states
+
+-- Odstrani element z listu
+removeItemFromList :: Eq a => a -> [a] -> [a]
+removeItemFromList a list = [x | x <- list, x /= a]
+
+-- Predikat na overenie ci je pravidlo v spravnom tvare
+checkRuleFormat :: [String] -> String -> Bool
+checkRuleFormat allStates rule = do
+							let ruleList = removeItemFromList "," $ wordsWhen (==',') rule
+							if (((length $ ruleList) == 3) && ((length $ ruleList !! 1) == 1))
+								then do
+									let startState = ruleList !! 0
+									let symbol = head $ ruleList !! 1
+									let endState = ruleList !! 2
+									if (isInteger startState && isInteger endState && isAsciiLower symbol)
+										then do
+											if (elem startState allStates &&  elem endState allStates) then True
+												else False
+										else False
+							else False
+
+
+-- Skontroluje spravnost vsetkych stavov
+checkRules :: ([String], [String]) -> Bool
+checkRules (rules, allStatesList) = do
+							let checkRulePredicate = checkRuleFormat allStatesList
+							all (checkRulePredicate) rules 
+
+-------------------------------OUTPUT-------------------------------
+
+printStates :: [String] -> String
+printStates states = intercalate "," states
+
+-------------------------------INPUT--------------------------------
+
+--Nacita vstup zo stdin
+getRules :: IO [String]
+getRules = go ""
+	where go contents = do
+		line <- getLine
+		if line == "q"
+			then return $ lines contents
+		else go (contents ++ line ++ "\n")
+
+-------------------------------MAIN---------------------------------
+
 main = do
 	argv <- getArgs
-	(opts, fname) <- compilerOpts argv
-	print opts 
-	print fname
+	(opts, filenames) <- compilerOpts argv
 
-	when (not $ isNothing $ optShowDKA opts) $ do
-		if null fname
+	when (listnumber filenames > 1) $ do
+		error "Too much files."
+
+	when ((not $ isNothing $ optShowDKA opts) && (not $ isNothing $ optShowMKA opts)) $ do
+		if null filenames
 			then do
-				print "SHOWDKA STDOUT"
+				print "SHOWDKA, SHOWMKA STDOUT"
 				exitSuccess
 			else do
-				print "SHOWDKA FILE"
+				print "SHOWDKA, SHOWMKA FILE"
 				exitSuccess
+
+	when (not $ isNothing $ optShowDKA opts) $ do
+		if null filenames
+			then do
+				allStates <- getLine
+				startState <- getLine
+				endStates <- getLine
+				rules <- getRules
+				
+				let allStatesList = wordsWhen (==',') allStates
+				let startStateList = wordsWhen (==',') startState
+				let endStatesList = wordsWhen (==',') endStates
+
+				if (checkStatesFormat allStatesList && checkStartState startStateList && 
+					checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
+					checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
+						print "Spravny DKA"
+						putStrLn $ id printStates allStatesList
+						putStrLn $ id printStates startStateList
+						putStrLn $ id printStates endStatesList
+						mapM_ putStrLn $ id rules
+
+				else do
+					error "Chybny DKA"
+
+				exitSuccess
+			else do
+				let filename = head filenames
+				lines <- customFileParser filename
+				let (allStates, startState, endStates, rules) = loadDKA $ words lines
+				let allStatesList = wordsWhen (==',') allStates
+				let startStateList = wordsWhen (==',') startState
+				let endStatesList = wordsWhen (==',') endStates
+
+				if (checkStatesFormat allStatesList && checkStartState startStateList && 
+					checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
+					checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
+						print "Spravny DKA"
+						putStrLn $ id printStates allStatesList
+						putStrLn $ id printStates startStateList
+						putStrLn $ id printStates endStatesList
+						mapM_ putStrLn $ id rules
+
+				else do
+					error "Chybny DKA"
+				exitSuccess
+
 	when (not $ isNothing $ optShowMKA opts) $ do
-		if null fname
+		if null filenames
 			then do
 				print "SHOWMKA STDOUT"
 				exitSuccess
