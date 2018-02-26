@@ -114,7 +114,8 @@ main = do
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do 
-						print automat
+						print $ minimizeAutomat automat
+
 						exitSuccess
 					Nothing -> error "Chybny DKA"
 
