@@ -7,13 +7,6 @@ import AutomatData
 
 ------------------------------DKA PARSER----------------------------------
 
--- Rozdeli String na zaklade delimetra
-wordsWhen     :: (Char -> Bool) -> String -> [String]
-wordsWhen p s =  case dropWhile p s of
-                      "" -> []
-                      s' -> w : wordsWhen p s''
-                            where (w, s'') = break p s'
-
 -- Dlzka listu
 listnumber :: [String] -> Int 
 listnumber [] = 0
@@ -74,9 +67,17 @@ checkRules (rules, allStatesList) = do
 								all (checkRulePredicate) rules
 							else False
 
-isDKAValid :: ([String], [String], [String], [String]) -> Bool
-isDKAValid (allStatesList, startStateList, endStatesList, rules) = do
+-- Vytvorenie struktury automatu
+loadAutomatData :: ([String], [String], [String], [String]) -> Maybe Automat
+loadAutomatData (allStatesList, startStateList, endStatesList, rules) = do
 																if (checkStatesFormat allStatesList && checkStartState startStateList && 
 																	checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
-																	checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then True
-																else False
+																	checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
+																		let transitions = map makeTransition rules
+																		Just Automat { 	states = map (read::String->State) allStatesList,
+																					delta = map makeTransition rules,
+																					sigma = getSigma transitions,
+																					initialSate = map (read::String->State) startStateList,
+																					endStates = map (read::String->State) endStatesList
+																				}
+																else Nothing

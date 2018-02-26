@@ -101,29 +101,22 @@ main = do
 				let startStateList = wordsWhen (==',') startState
 				let endStatesList = wordsWhen (==',') endStates
 
-				if (isDKAValid (allStatesList, startStateList, endStatesList, rules)) then do
-					print "Spravny DKA"
-					putStrLn $ id printStates allStatesList
-					putStrLn $ id printStates startStateList
-					putStrLn $ id printStates endStatesList
-					mapM_ putStrLn $ id rules
-					exitSuccess
-				else do
-					error "Chybny DKA"
+				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
+					Just automat -> do
+						print automat
+						exitSuccess
+					Nothing -> error "Chybny DKA"
 			else do
 				let filename = head filenames
 				lines <- customFileParser filename
 				let (allStatesList, startStateList, endStatesList, rules) = loadDKA $ words lines
+				print (allStatesList, startStateList, endStatesList, rules)
 
-				if (isDKAValid (allStatesList, startStateList, endStatesList, rules)) then do
-					print "Spravny DKA"
-					putStrLn $ id printStates allStatesList
-					putStrLn $ id printStates startStateList
-					putStrLn $ id printStates endStatesList
-					mapM_ putStrLn $ id rules
-					exitSuccess
-				else do
-					error "Chybny DKA"
+				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
+					Just automat -> do 
+						print automat
+						exitSuccess
+					Nothing -> error "Chybny DKA"
 
 	when (not $ isNothing $ optShowMKA opts) $ do
 		if null filenames
@@ -131,7 +124,7 @@ main = do
 				print "SHOWMKA STDOUT"
 				exitSuccess
 			else do
-				print "SHOWDKA FILE"
+				print "SHOWMKA FILE"
 				exitSuccess
 
 	error "You need to specify one argument."
