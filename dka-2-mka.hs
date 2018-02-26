@@ -111,8 +111,10 @@ checkRuleFormat allStates rule = do
 -- Skontroluje spravnost vsetkych stavov
 checkRules :: ([String], [String]) -> Bool
 checkRules (rules, allStatesList) = do
-							let checkRulePredicate = checkRuleFormat allStatesList
-							all (checkRulePredicate) rules
+							if (length rules /= 0) then do 
+								let checkRulePredicate = checkRuleFormat allStatesList
+								all (checkRulePredicate) rules
+							else False
 
 isDKAValid :: ([String], [String], [String], [String]) -> Bool
 isDKAValid (allStatesList, startStateList, endStatesList, rules) = do
