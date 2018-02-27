@@ -12,9 +12,10 @@ data MinimalisationClass = MinimalisationClass {
 											} deriving (Eq, Ord, Show)
 
 data CellTransition = CellTransition {
-												transitionValue :: String,
-												endStatesHelper :: [State]
-											} deriving (Eq, Ord, Show)
+										transitionValue :: String,
+										endStatesHelper :: [State]
+									} deriving (Eq, Ord, Show)
+
 --Pre kazdu triedu zoberiem kazdy stav a pre kazdy znak z abecedy
 -- vyskusakm do akej triedy padne. Ak nejaky padne do inej triedy nez ta prva tak ten stav
 -- odstepim a dam do novej minimalizacnej triedy. + musim kontrolovat ci sa uz nenachadza
@@ -46,8 +47,7 @@ getCellTransition sigmaValue (startStates, transitions) = do
 												let transitionsWithSameStartStateAndValue = filter (\x -> (value x) == sigmaValue) transitionsWithSameStartState
 												CellTransition { transitionValue = sigmaValue, endStatesHelper = map (\x -> to x) transitionsWithSameStartStateAndValue }
 
-
-
+-- Updatuje jednu ekvivalencnu triedu
 updateMinimalisationClass :: ([String], [Transition]) -> MinimalisationClass -> MinimalisationClass
 updateMinimalisationClass (sigma,delta) singleClass = do
 												let cellTransitions = map (\x -> getCellTransition x (classStates singleClass, delta)) sigma
@@ -57,3 +57,4 @@ updateMinimalisationClass (sigma,delta) singleClass = do
 
 splitClasses :: Automat -> [MinimalisationClass] -> [MinimalisationClass]
 splitClasses automat minimalisationClasses = map (updateMinimalisationClass (sigma automat, delta automat)) minimalisationClasses
+				
