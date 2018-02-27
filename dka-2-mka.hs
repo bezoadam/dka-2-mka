@@ -110,11 +110,10 @@ main = do
 				let filename = head filenames
 				lines <- customFileParser filename
 				let (allStatesList, startStateList, endStatesList, rules) = loadDKA $ words lines
-				print (allStatesList, startStateList, endStatesList, rules)
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do 
-						print $ minimizeAutomat automat
+						print $ splitClasses automat $ initClasses automat
 
 						exitSuccess
 					Nothing -> error "Chybny DKA"

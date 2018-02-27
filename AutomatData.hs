@@ -17,7 +17,7 @@ data Automat = Automat {
 				delta :: [Transition],		-- Prechodova funkcia
 				initialSate :: [State],		-- Startovaci stav
 				endStates :: [State]		-- Mnozina koncovych stavov
-			} deriving (Show)
+			} deriving (Show, Eq, Ord)
 
 -- Odstrani duplikaty z listu
 removeDuplicates :: Eq a => [a] -> [a]
