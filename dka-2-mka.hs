@@ -113,12 +113,7 @@ main = do
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do 
-						print automat
-						print $ minimizeAutomat automat
-						let sigmaValue = "b"
-						let initClass = initClasses automat !! 0
-						let getCellTransitioForA = getCellTransition sigmaValue
-						print $ getCellTransitioForA (classStates initClass, delta automat)
+						print $ splitClasses automat $ initClasses automat
 
 						exitSuccess
 					Nothing -> error "Chybny DKA"

@@ -39,14 +39,20 @@ isStartStateInTransition (startStates, transition) = do
 											if (elem fromValue startStates) then True 
 											else False
 
+-- Vypocita koncove stavy v jednej ekv. triede pre jeden znak
 getCellTransition :: String -> ([State], [Transition]) -> CellTransition
 getCellTransition sigmaValue (startStates, transitions) = do
 												let transitionsWithSameStartState = filter (\x -> isStartStateInTransition(startStates, x)) transitions
 												let transitionsWithSameStartStateAndValue = filter (\x -> (value x) == sigmaValue) transitionsWithSameStartState
 												CellTransition { transitionValue = sigmaValue, endStatesHelper = map (\x -> to x) transitionsWithSameStartStateAndValue }
 
+
+
 updateMinimalisationClass :: ([String], [Transition]) -> MinimalisationClass -> MinimalisationClass
-updateMinimalisationClass (sigma,delta) singleClass = singleClass
+updateMinimalisationClass (sigma,delta) singleClass = do
+												let cellTransitions = map (\x -> getCellTransition x (classStates singleClass, delta)) sigma
+												MinimalisationClass { number = number singleClass, classStates = classStates singleClass, cellTransitions = Just cellTransitions }
+
 												
 
 splitClasses :: Automat -> [MinimalisationClass] -> [MinimalisationClass]
