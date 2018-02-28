@@ -2,8 +2,10 @@ module Minimalisation where
 
 import Data.Foldable
 import Data.List
+import Data.Maybe
 
 import AutomatData
+import DKAParser (listnumber)
 
 data MinimalisationClass = MinimalisationClass {
 												number :: Int,
@@ -70,6 +72,37 @@ updateMinimalisationClass minimalisationClasses (sigma,delta) singleClass = do
 updateMinimalisationClasses :: Automat -> [MinimalisationClass] -> [MinimalisationClass]
 updateMinimalisationClasses automat minimalisationClasses = do 
 										map (updateMinimalisationClass minimalisationClasses (sigma automat, delta automat)) minimalisationClasses
+
+getNewTransitionClass :: Int -> CellTransition -> Bool
+getNewTransitionClass classNumber cellTransition = do
+							if (classNumber /= endClass cellTransition) then True
+							else False
+
+
+splitTransitionClasses :: (Int, [CellTransition]) -> [CellTransition]
+splitTransitionClasses (classNumber, cellTransitions) = do
+										let firstEndClass = endClass $ cellTransitions !! 0
+										let getNewTransitionClassWithNumber = getNewTransitionClass classNumber
+										let otherTransitionClasses = filter (getNewTransitionClassWithNumber) cellTransitions
+										if (listnumber otherTransitionClasses /= 0) then otherTransitionClasses
+										else cellTransitions
+
+getStartStates :: [CellTransition] -> [State]
+getStartStates cellTransitions = map (\x -> startState x) cellTransitions
+
+findDifference :: [[CellTransition]] -> [[CellTransition]] -> Maybe [CellTransition]
+findDifference [] _ = Nothing
+findDifference _ [] = Nothing
+findDifference (x:xs) (y:ys) = 	if x /= y then Just y else findDifference xs ys
+
+splitMinimalisationClass :: MinimalisationClass -> MinimalisationClass
+splitMinimalisationClass singleClass = do 
+							let cellTransitionsNew = fromJust (cellTransitions singleClass)
+							let splittedTransitionClasses = map (\x -> splitTransitionClasses (number singleClass, x)) cellTransitionsNew
+							let difference = findDifference cellTransitionsNew splittedTransitionClasses
+							case difference of
+								Just difference -> MinimalisationClass { number = (number singleClass) + 1, classStates = getStartStates difference, cellTransitions = Nothing }
+								Nothing -> singleClass
 
 -- splitMinimalisationClass :: MinimalisationClass -> [MinimalisationClass]
 -- splitMinimalisationClass singleClass = do

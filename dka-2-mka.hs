@@ -115,6 +115,10 @@ main = do
 					Just automat -> do 
 						let classes = updateMinimalisationClasses automat $ initClasses automat
 						mapM_ print classes
+						putStrLn ""
+						let newClasses = classes ++ [splitMinimalisationClass (classes !! 1)]
+						let newClassesAfter = updateMinimalisationClasses automat $ newClasses
+						mapM_ print newClassesAfter
 						exitSuccess
 					Nothing -> error "Chybny DKA"
 
