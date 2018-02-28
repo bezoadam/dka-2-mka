@@ -13,8 +13,13 @@ data MinimalisationClass = MinimalisationClass {
 
 data CellTransition = CellTransition {
 										transitionValue :: String,
-										endStatesHelper :: [State]
+										endClass :: [Int]
 									} deriving (Eq, Ord, Show)
+
+data SplitClass = SplitClass {
+								insideStates :: [State],
+								outsideStates :: Maybe [State]
+							} deriving (Eq, Ord, Show)
 
 --Pre kazdu triedu zoberiem kazdy stav a pre kazdy znak z abecedy
 -- vyskusakm do akej triedy padne. Ak nejaky padne do inej triedy nez ta prva tak ten stav
@@ -40,21 +45,38 @@ isStartStateInTransition (startStates, transition) = do
 											if (elem fromValue startStates) then True 
 											else False
 
+getClassNumber :: [MinimalisationClass] -> State -> Int
+getClassNumber minimalisationClasses endState = number $ filter (\x -> elem endState $ classStates x) minimalisationClasses !! 0
+
+
+
 -- Vypocita koncove stavy v jednej ekv. triede pre jeden znak
-getCellTransition :: String -> ([State], [Transition]) -> CellTransition
-getCellTransition sigmaValue (startStates, transitions) = do
+getCellTransition :: [MinimalisationClass] -> String -> ([State], [Transition]) -> CellTransition
+getCellTransition minimalisationClasses sigmaValue (startStates, transitions) = do
 												let transitionsWithSameStartState = filter (\x -> isStartStateInTransition(startStates, x)) transitions
 												let transitionsWithSameStartStateAndValue = filter (\x -> (value x) == sigmaValue) transitionsWithSameStartState
-												CellTransition { transitionValue = sigmaValue, endStatesHelper = map (\x -> to x) transitionsWithSameStartStateAndValue }
+												let endStates = map (\x -> to x) transitionsWithSameStartStateAndValue
+												CellTransition { transitionValue = sigmaValue, endClass = map (\x -> getClassNumber minimalisationClasses x) endStates }
 
 -- Updatuje jednu ekvivalencnu triedu
-updateMinimalisationClass :: ([String], [Transition]) -> MinimalisationClass -> MinimalisationClass
-updateMinimalisationClass (sigma,delta) singleClass = do
-												let cellTransitions = map (\x -> getCellTransition x (classStates singleClass, delta)) sigma
+updateMinimalisationClass :: [MinimalisationClass] -> ([String], [Transition]) -> MinimalisationClass -> MinimalisationClass
+updateMinimalisationClass minimalisationClasses (sigma,delta) singleClass = do
+												let cellTransitions = map (\x -> getCellTransition minimalisationClasses x (classStates singleClass, delta)) sigma
 												MinimalisationClass { number = number singleClass, classStates = classStates singleClass, cellTransitions = Just cellTransitions }
 
-												
-
 splitClasses :: Automat -> [MinimalisationClass] -> [MinimalisationClass]
-splitClasses automat minimalisationClasses = map (updateMinimalisationClass (sigma automat, delta automat)) minimalisationClasses
+splitClasses automat minimalisationClasses = map (updateMinimalisationClass minimalisationClasses (sigma automat, delta automat)) minimalisationClasses
 				
+-- getMinimalisationClassNumber :: [MinimalisationClass] -> State -> Int
+-- getMinimalisationClassNumber minimalisationClasses checkingState = number $ filter (\x -> elem checkingState $ classStates x) minimalisationClasses !! 0
+
+-- checkMinimalisationClass :: [MinimalisationClass] -> (MinimalisationClass, [State]) -> SplitClass
+-- checkMinimalisationClass minimalisationClasses (singleClass, endStates) = do
+-- 								let getMinimalisationClassNumber = getMinimalisationClassNumber minimalisationClasses
+-- 								let firstStateClassNumber = getMinimalisationClassNumber $ endStates !! 0
+-- 								let insideStates = filter (\x -> elem firstStateClassNumber $ classStates singleClass) endStates
+-- 									SplitClass { insideStates = $ classStates singleClass \\ endStates, outsideStates =  } 
+
+-- checkIfSameMinimalisationClass :: [MinimalisationClass] -> [State] -> Maybe [[State]]
+-- checkIfSameMinimalisationClass minimalisationClasses endStates = do 
+-- 													let startStates
