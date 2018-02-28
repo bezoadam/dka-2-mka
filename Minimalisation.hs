@@ -8,12 +8,13 @@ import AutomatData
 data MinimalisationClass = MinimalisationClass {
 												number :: Int,
 												classStates :: [State],
-												cellTransitions :: Maybe [CellTransition]
+												cellTransitions :: Maybe [[CellTransition]]
 											} deriving (Eq, Ord, Show)
 
 data CellTransition = CellTransition {
+										startState :: Int,
 										transitionValue :: String,
-										endClass :: [Int]
+										endClass :: Int
 									} deriving (Eq, Ord, Show)
 
 data SplitClass = SplitClass {
@@ -39,34 +40,40 @@ initClasses automat = 	[
 						 	MinimalisationClass { number = 2, classStates = (states automat \\ endStates automat), cellTransitions = Nothing}
 						]
 
-isStartStateInTransition :: ([State], Transition) -> Bool
-isStartStateInTransition (startStates, transition) = do
+isStartStateInTransition :: (State, Transition) -> Bool
+isStartStateInTransition (startState, transition) = do
 											let fromValue = from transition
-											if (elem fromValue startStates) then True 
+											if (startState == fromValue) then True 
 											else False
 
 getClassNumber :: [MinimalisationClass] -> State -> Int
 getClassNumber minimalisationClasses endState = number $ filter (\x -> elem endState $ classStates x) minimalisationClasses !! 0
 
 
+getCellTransition :: [MinimalisationClass] -> String -> (State, [Transition]) -> CellTransition
+getCellTransition minimalisationClasses sigmaValue (startState, transitions) = do
+												let transitionsWithSameStartState = filter (\x -> isStartStateInTransition(startState, x)) transitions
+												let transitionWithSameStartStateAndValue = (filter (\x -> (value x) == sigmaValue) transitionsWithSameStartState) !! 0
+												CellTransition { startState = startState, transitionValue = sigmaValue, endClass = getClassNumber minimalisationClasses (to transitionWithSameStartStateAndValue)}
 
 -- Vypocita koncove stavy v jednej ekv. triede pre jeden znak
-getCellTransition :: [MinimalisationClass] -> String -> ([State], [Transition]) -> CellTransition
-getCellTransition minimalisationClasses sigmaValue (startStates, transitions) = do
-												let transitionsWithSameStartState = filter (\x -> isStartStateInTransition(startStates, x)) transitions
-												let transitionsWithSameStartStateAndValue = filter (\x -> (value x) == sigmaValue) transitionsWithSameStartState
-												let endStates = map (\x -> to x) transitionsWithSameStartStateAndValue
-												CellTransition { transitionValue = sigmaValue, endClass = map (\x -> getClassNumber minimalisationClasses x) endStates }
+getCellTransitions :: [MinimalisationClass] -> String -> ([State], [Transition]) -> [CellTransition]
+getCellTransitions minimalisationClasses sigmaValue (startStates, transitions) = do
+												map (\x -> getCellTransition minimalisationClasses sigmaValue (x, transitions)) startStates
 
 -- Updatuje jednu ekvivalencnu triedu
 updateMinimalisationClass :: [MinimalisationClass] -> ([String], [Transition]) -> MinimalisationClass -> MinimalisationClass
 updateMinimalisationClass minimalisationClasses (sigma,delta) singleClass = do
-												let cellTransitions = map (\x -> getCellTransition minimalisationClasses x (classStates singleClass, delta)) sigma
+												let cellTransitions = map (\x -> getCellTransitions minimalisationClasses x (classStates singleClass, delta)) sigma
 												MinimalisationClass { number = number singleClass, classStates = classStates singleClass, cellTransitions = Just cellTransitions }
 
-splitClasses :: Automat -> [MinimalisationClass] -> [MinimalisationClass]
-splitClasses automat minimalisationClasses = map (updateMinimalisationClass minimalisationClasses (sigma automat, delta automat)) minimalisationClasses
-				
+updateMinimalisationClasses :: Automat -> [MinimalisationClass] -> [MinimalisationClass]
+updateMinimalisationClasses automat minimalisationClasses = do 
+										map (updateMinimalisationClass minimalisationClasses (sigma automat, delta automat)) minimalisationClasses
+
+-- splitMinimalisationClass :: MinimalisationClass -> [MinimalisationClass]
+-- splitMinimalisationClass singleClass =  
+
 -- getMinimalisationClassNumber :: [MinimalisationClass] -> State -> Int
 -- getMinimalisationClassNumber minimalisationClasses checkingState = number $ filter (\x -> elem checkingState $ classStates x) minimalisationClasses !! 0
 

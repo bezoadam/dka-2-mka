@@ -113,8 +113,8 @@ main = do
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do 
-						print $ splitClasses automat $ initClasses automat
-
+						let classes = updateMinimalisationClasses automat $ initClasses automat
+						mapM_ print classes
 						exitSuccess
 					Nothing -> error "Chybny DKA"
 

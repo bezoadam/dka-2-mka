@@ -8,7 +8,7 @@ import AutomatData
 ------------------------------DKA PARSER----------------------------------
 
 -- Dlzka listu
-listnumber :: [String] -> Int 
+listnumber :: [a] -> Int 
 listnumber [] = 0
 listnumber (x:xs) = 1 + listnumber xs
 
