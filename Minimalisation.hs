@@ -95,14 +95,14 @@ findDifference [] _ = Nothing
 findDifference _ [] = Nothing
 findDifference (x:xs) (y:ys) = 	if x /= y then Just y else findDifference xs ys
 
-splitMinimalisationClass :: MinimalisationClass -> MinimalisationClass
+splitMinimalisationClass :: MinimalisationClass -> Maybe (Int, MinimalisationClass)
 splitMinimalisationClass singleClass = do 
 							let cellTransitionsNew = fromJust (cellTransitions singleClass)
 							let splittedTransitionClasses = map (\x -> splitTransitionClasses (number singleClass, x)) cellTransitionsNew
 							let difference = findDifference cellTransitionsNew splittedTransitionClasses
 							case difference of
-								Just difference -> MinimalisationClass { number = (number singleClass) + 1, classStates = getStartStates difference, cellTransitions = Nothing }
-								Nothing -> singleClass
+								Just difference -> Just (number singleClass, MinimalisationClass { number = (number singleClass) + 1, classStates = getStartStates difference, cellTransitions = Nothing })
+								Nothing -> Nothing
 
 -- splitMinimalisationClass :: MinimalisationClass -> [MinimalisationClass]
 -- splitMinimalisationClass singleClass = do
