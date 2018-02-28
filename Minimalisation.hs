@@ -72,7 +72,8 @@ updateMinimalisationClasses automat minimalisationClasses = do
 										map (updateMinimalisationClass minimalisationClasses (sigma automat, delta automat)) minimalisationClasses
 
 -- splitMinimalisationClass :: MinimalisationClass -> [MinimalisationClass]
--- splitMinimalisationClass singleClass =  
+-- splitMinimalisationClass singleClass = do
+-- 							len secondClass = filter () 
 
 -- getMinimalisationClassNumber :: [MinimalisationClass] -> State -> Int
 -- getMinimalisationClassNumber minimalisationClasses checkingState = number $ filter (\x -> elem checkingState $ classStates x) minimalisationClasses !! 0
