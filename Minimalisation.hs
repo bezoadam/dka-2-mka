@@ -1,8 +1,9 @@
-module Minimalisation where
+module Minimalisation where	
 
 import Data.Foldable
 import Data.List
 import Data.Maybe
+import Debug.Trace
 
 import AutomatData
 import DKAParser (listnumber)
@@ -23,6 +24,8 @@ data SplitClass = SplitClass {
 								insideStates :: [State],
 								outsideStates :: Maybe [State]
 							} deriving (Eq, Ord, Show)
+
+debug = flip trace
 
 --Pre kazdu triedu zoberiem kazdy stav a pre kazdy znak z abecedy
 -- vyskusakm do akej triedy padne. Ak nejaky padne do inej triedy nez ta prva tak ten stav
@@ -110,11 +113,13 @@ splitClasses automat minimalisationClasses = do
 					case splitMinimalisationClass minimalisationClasses of
 						Just (originalClassNumber, splittedClass) -> do
 							let filteredClass = filter (\x -> number x == originalClassNumber) minimalisationClasses !! 0
-							let newClass = MinimalisationClass { number = number filteredClass, classStates = classStates filteredClass \\ classStates splittedClass, cellTransitions = cellTransitions filteredClass }
+							let newClass = MinimalisationClass { number = number splittedClass, classStates = classStates filteredClass \\ classStates splittedClass, cellTransitions = cellTransitions filteredClass }
 							let newClasses = replace' filteredClass newClass minimalisationClasses
 							let newNewClasses = newClasses ++ [splittedClass]
 							let updatedNewClasses = updateMinimalisationClasses automat newNewClasses
+							--TODO FIX NUMBER
 							splitClasses automat updatedNewClasses
+							trace ("MINIMALCLASSES: \n" ++ show updatedNewClasses ++ "    \n REPLACE FILTERED CLASS:    \n " ++ show filteredClass ++ "    \n   REPLACE NEW CLASS          \n"  ++ show newClass) (splitClasses automat updatedNewClasses)
 						Nothing -> minimalisationClasses
 
 
