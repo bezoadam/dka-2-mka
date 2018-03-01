@@ -69,9 +69,6 @@ getRules = go ""
 
 ------------------------------MINIMALISATION----------------------------
 
-replace' :: Eq b => b -> b -> [b] -> [b]
-replace' a b = map (\x -> if (a == x) then b else x)
-
 -------------------------------MAIN---------------------------------
 
 main = do
@@ -115,16 +112,9 @@ main = do
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do 
 						let classes = updateMinimalisationClasses automat $ initClasses automat
-						mapM_ print classes
-						putStrLn ""
-						let (originalClassNumber, splittedClass) = fromJust (splitMinimalisationClass (classes !! 1))
-						let filteredClass = filter (\x -> number x == originalClassNumber) classes !! 0
-						let newClass = MinimalisationClass { number = number filteredClass, classStates = classStates filteredClass \\ classStates splittedClass, cellTransitions = cellTransitions filteredClass }
-						let newClasses = replace' filteredClass newClass classes
-						print originalClassNumber
-						print newClasses
-						let newNewClasses = newClasses ++ [splittedClass]
-						let newClassesAfter = updateMinimalisationClasses automat $ newNewClasses
+						-- mapM_ print classes
+						-- putStrLn ""
+						let newClassesAfter = splitClasses automat classes
 						mapM_ print newClassesAfter
 						exitSuccess
 					Nothing -> error "Chybny DKA"

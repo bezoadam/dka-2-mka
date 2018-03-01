@@ -95,29 +95,29 @@ findDifference [] _ = Nothing
 findDifference _ [] = Nothing
 findDifference (x:xs) (y:ys) = 	if x /= y then Just y else findDifference xs ys
 
-splitMinimalisationClass :: MinimalisationClass -> Maybe (Int, MinimalisationClass)
-splitMinimalisationClass singleClass = do 
-							let cellTransitionsNew = fromJust (cellTransitions singleClass)
-							let splittedTransitionClasses = map (\x -> splitTransitionClasses (number singleClass, x)) cellTransitionsNew
+splitMinimalisationClass :: [MinimalisationClass] -> Maybe (Int, MinimalisationClass)
+splitMinimalisationClass [] = Nothing
+splitMinimalisationClass (x:xs) = do 
+							let cellTransitionsNew = fromJust (cellTransitions x)
+							let splittedTransitionClasses = map (\y -> splitTransitionClasses (number x, y)) cellTransitionsNew
 							let difference = findDifference cellTransitionsNew splittedTransitionClasses
 							case difference of
-								Just difference -> Just (number singleClass, MinimalisationClass { number = (number singleClass) + 1, classStates = getStartStates difference, cellTransitions = Nothing })
-								Nothing -> Nothing
+								Just difference -> Just(number x, MinimalisationClass { number = (number x) + 1, classStates = getStartStates difference, cellTransitions = Nothing })
+								Nothing -> splitMinimalisationClass xs
 
--- splitMinimalisationClass :: MinimalisationClass -> [MinimalisationClass]
--- splitMinimalisationClass singleClass = do
--- 							len secondClass = filter () 
+splitClasses :: Automat -> [MinimalisationClass] -> [MinimalisationClass]
+splitClasses automat minimalisationClasses = do
+					case splitMinimalisationClass minimalisationClasses of
+						Just (originalClassNumber, splittedClass) -> do
+							let filteredClass = filter (\x -> number x == originalClassNumber) minimalisationClasses !! 0
+							let newClass = MinimalisationClass { number = number filteredClass, classStates = classStates filteredClass \\ classStates splittedClass, cellTransitions = cellTransitions filteredClass }
+							let newClasses = replace' filteredClass newClass minimalisationClasses
+							let newNewClasses = newClasses ++ [splittedClass]
+							let updatedNewClasses = updateMinimalisationClasses automat newNewClasses
+							splitClasses automat updatedNewClasses
+						Nothing -> minimalisationClasses
 
--- getMinimalisationClassNumber :: [MinimalisationClass] -> State -> Int
--- getMinimalisationClassNumber minimalisationClasses checkingState = number $ filter (\x -> elem checkingState $ classStates x) minimalisationClasses !! 0
 
--- checkMinimalisationClass :: [MinimalisationClass] -> (MinimalisationClass, [State]) -> SplitClass
--- checkMinimalisationClass minimalisationClasses (singleClass, endStates) = do
--- 								let getMinimalisationClassNumber = getMinimalisationClassNumber minimalisationClasses
--- 								let firstStateClassNumber = getMinimalisationClassNumber $ endStates !! 0
--- 								let insideStates = filter (\x -> elem firstStateClassNumber $ classStates singleClass) endStates
--- 									SplitClass { insideStates = $ classStates singleClass \\ endStates, outsideStates =  } 
+replace' :: Eq b => b -> b -> [b] -> [b]
+replace' a b = map (\x -> if (a == x) then b else x)
 
--- checkIfSameMinimalisationClass :: [MinimalisationClass] -> [State] -> Maybe [[State]]
--- checkIfSameMinimalisationClass minimalisationClasses endStates = do 
--- 													let startStates
