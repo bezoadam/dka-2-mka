@@ -51,7 +51,11 @@ compilerOpts argv =
 
 -------------------------------OUTPUT-------------------------------
 
+printStates :: Show a => [a] -> String
+printStates = intercalate "," . map show
 
+printTransitions :: Transition -> String
+printTransitions transition = show (from transition) ++ "," ++ value transition ++ "," ++ show (to transition)
 
 -------------------------------INPUT--------------------------------
 
@@ -89,16 +93,20 @@ main = do
 			then do
 				allStates <- getLine
 				startState <- getLine
-				endStates <- getLine
+				endStatesInput <- getLine
 				rules <- getRules
 				
 				let allStatesList = wordsWhen (==',') allStates
 				let startStateList = wordsWhen (==',') startState
-				let endStatesList = wordsWhen (==',') endStates
+				let endStatesList = wordsWhen (==',') endStatesInput
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do
-						print "SHOWDKA"
+						putStrLn $ id (printStates $ states automat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta automat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
 					Nothing -> error "Chybny DKA"
 			else do
@@ -108,7 +116,11 @@ main = do
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do 
-						print "SHOWDKA FILE"
+						putStrLn $ id (printStates $ states automat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta automat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
 					Nothing -> error "Chybny DKA"
 

@@ -78,7 +78,7 @@ loadAutomatData (allStatesList, startStateList, endStatesList, rules) = do
 																		Just Automat { 	states = map (read::String->State) allStatesList,
 																					delta = map makeTransition rules,
 																					sigma = getSigma transitions,
-																					initialSate = map (read::String->State) startStateList,
+																					initialState = read (startStateList !! 0) :: State,
 																					endStates = map (read::String->State) endStatesList
 																				}
 																else Nothing
