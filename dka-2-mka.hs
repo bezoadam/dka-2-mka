@@ -18,7 +18,7 @@ import Minimalisation
 import DKAParser
 import AutomatData
 
--------------------------------ARGUMENT PARSER----------------------------------
+-------------------------------ARGUMENT PARSER----------------------
 
 data Options = Options
 	{ 
@@ -51,8 +51,7 @@ compilerOpts argv =
 
 -------------------------------OUTPUT-------------------------------
 
-printStates :: [String] -> String
-printStates states = intercalate "," states
+
 
 -------------------------------INPUT--------------------------------
 
@@ -66,8 +65,6 @@ getRules = go ""
 		else do
 			line <- getLine
 			go (contents ++ line ++ "\n")
-
-------------------------------MINIMALISATION----------------------------
 
 -------------------------------MAIN---------------------------------
 
@@ -101,7 +98,7 @@ main = do
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do
-						print automat
+						print "SHOWDKA"
 						exitSuccess
 					Nothing -> error "Chybny DKA"
 			else do
@@ -111,22 +108,41 @@ main = do
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do 
-						let classes = updateMinimalisationClasses automat $ initClasses automat
-						-- mapM_ print classes
-						-- putStrLn ""
-						let newClassesAfter = splitClasses automat classes
-						print("ideme na to")
-						mapM_ print newClassesAfter
+						print "SHOWDKA FILE"
 						exitSuccess
 					Nothing -> error "Chybny DKA"
 
 	when (not $ isNothing $ optShowMKA opts) $ do
 		if null filenames
 			then do
-				print "SHOWMKA STDOUT"
+				allStates <- getLine
+				startState <- getLine
+				endStates <- getLine
+				rules <- getRules
+				
+				let allStatesList = wordsWhen (==',') allStates
+				let startStateList = wordsWhen (==',') startState
+				let endStatesList = wordsWhen (==',') endStates
+
+				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
+					Just automat -> do
+						let classes = updateMinimalisationClasses automat $ initClasses automat
+						let newClassesAfter = splitClasses automat classes
+						mapM_ print newClassesAfter
+					Nothing -> error "Chybny DKA"
 				exitSuccess
 			else do
-				print "SHOWMKA FILE"
+				let filename = head filenames
+				lines <- customFileParser filename
+				let (allStatesList, startStateList, endStatesList, rules) = loadDKA $ words lines
+
+				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
+					Just automat -> do 
+						let classes = updateMinimalisationClasses automat $ initClasses automat
+						let newClassesAfter = splitClasses automat classes
+						mapM_ print newClassesAfter
+						exitSuccess
+					Nothing -> error "Chybny DKA"
 				exitSuccess
 
 	error "You need to specify one argument."
