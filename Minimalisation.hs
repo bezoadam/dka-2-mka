@@ -3,10 +3,8 @@
 
 module Minimalisation where	
 
-import Data.Foldable
 import Data.List
 import Data.Maybe
-import Debug.Trace
 
 import AutomatData
 import DKAParser (listnumber)

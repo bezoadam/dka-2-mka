@@ -2,10 +2,7 @@
 --Adam Bezák xbezak01
 
 import Control.Monad.State
-import qualified Data.IntMap as M
-import Data.Word
 import System.Environment
-import System.Directory
 import System.Exit
 import System.Console.GetOpt
 import System.IO
@@ -91,12 +88,60 @@ main = do
 	when ((not $ isNothing $ optShowDKA opts) && (not $ isNothing $ optShowMKA opts)) $ do
 		if null filenames
 			then do
-				print "SHOWDKA, SHOWMKA STDOUT"
-				exitSuccess
-			else do
-				print "SHOWDKA, SHOWMKA FILE"
-				exitSuccess
+				allStates <- getLine
+				startState <- getLine
+				endStatesInput <- getLine
+				rules <- getRules
+				
+				let allStatesList = wordsWhen (==',') allStates
+				let startStateList = wordsWhen (==',') startState
+				let endStatesList = wordsWhen (==',') endStatesInput
 
+				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
+					Just automat -> do
+						putStrLn $ id (printStates $ states automat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta automat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+
+						putStrLn ""
+
+						let classes = updateMinimalisationClasses automat $ initClasses automat
+						let minimalisationClasses = splitClasses automat classes
+						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						putStrLn $ id (printStates $ states minimalAutomat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta minimalAutomat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+						exitSuccess
+					Nothing -> error "Chybny DKA."
+			else do
+				let filename = head filenames
+				lines <- customFileParser filename
+				let (allStatesList, startStateList, endStatesList, rules) = loadDKA $ words lines
+
+				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
+					Just automat -> do
+						putStrLn $ id (printStates $ states automat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta automat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+
+						putStrLn ""
+
+						let classes = updateMinimalisationClasses automat $ initClasses automat
+						let minimalisationClasses = splitClasses automat classes
+						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						putStrLn $ id (printStates $ states minimalAutomat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta minimalAutomat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+						exitSuccess
+					Nothing -> error "Chybny DKA."
 	-- "-t"
 	when (not $ isNothing $ optShowDKA opts) $ do
 		if null filenames
