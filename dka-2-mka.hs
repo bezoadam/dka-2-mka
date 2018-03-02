@@ -36,10 +36,10 @@ options :: [OptDescr (Options -> Options)]
 options =
 	[ Option ['i']	[]
 	    (OptArg ((\ f opts -> opts { optShowDKA = Just f }) . fromMaybe "ShowDKA") "FILENAME")
-	    "Load and write DKA on file output or STDOUT."
+	    "Nacitanie a vypis vstupneho DKA na standartni vystup."
 	, Option ['t'] []
 	    (OptArg ((\ f opts -> opts { optShowMKA = Just f }) . fromMaybe "ShowMKA") "FILENAME")
-	    "Load and transform DKA into MKA and write on file output or STDOUT."
+	    "Nacitanie a transformacia DKA na MKA a vypis MKA na standartni vystup."
 	]
 
 compilerOpts :: [String] -> IO (Options, [String])
@@ -47,7 +47,7 @@ compilerOpts argv =
  	case getOpt Permute options argv of
      	(o,n,[]) -> return (foldl (flip id) defaultOptions o, n)
      	(_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
- 	where header = "Usage: OPTION [FILENAME]"
+ 	where header = "Pouziti: OPTION [FILENAME]"
 
 -------------------------------OUTPUT-------------------------------
 
@@ -56,6 +56,15 @@ printStates = intercalate "," . map show
 
 printTransitions :: Transition -> String
 printTransitions transition = show (from transition) ++ "," ++ value transition ++ "," ++ show (to transition)
+
+getMKA :: (Automat, [MinimalisationClass]) -> Automat
+getMKA (automat, minimalisationClasses) = do 
+						let minimalStates = getStatesFromMinimalisationClasses minimalisationClasses
+						let minimalStartState = getStartStateFromMinimalisationClasses (initialState automat, minimalisationClasses)
+						let minimalEndStates = getEndStatesFromMinimalisationClasses (endStates automat, minimalisationClasses)
+						let minimalTransitions = concat $ getTransitionsFromMinimalisationClasses minimalisationClasses
+						let transitionsStrings = map printTransitions minimalTransitions
+						Automat { states = minimalStates, sigma = sigma automat, delta = minimalTransitions, initialState = minimalStartState, endStates = minimalEndStates }
 
 -------------------------------INPUT--------------------------------
 
@@ -77,7 +86,7 @@ main = do
 	(opts, filenames) <- compilerOpts argv
 
 	when (listnumber filenames > 1) $ do
-		error "Too much files."
+		error "Privela vstupnych suborov"
 
 	when ((not $ isNothing $ optShowDKA opts) && (not $ isNothing $ optShowMKA opts)) $ do
 		if null filenames
@@ -88,6 +97,7 @@ main = do
 				print "SHOWDKA, SHOWMKA FILE"
 				exitSuccess
 
+	-- "-t"
 	when (not $ isNothing $ optShowDKA opts) $ do
 		if null filenames
 			then do
@@ -108,7 +118,7 @@ main = do
 						let transitionsStrings = map printTransitions $ delta automat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
-					Nothing -> error "Chybny DKA"
+					Nothing -> error "Chybny DKA."
 			else do
 				let filename = head filenames
 				lines <- customFileParser filename
@@ -122,26 +132,33 @@ main = do
 						let transitionsStrings = map printTransitions $ delta automat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
-					Nothing -> error "Chybny DKA"
+					Nothing -> error "Chybny DKA."
 
+	-- "-i"
 	when (not $ isNothing $ optShowMKA opts) $ do
 		if null filenames
 			then do
 				allStates <- getLine
 				startState <- getLine
-				endStates <- getLine
+				endStatesInput <- getLine
 				rules <- getRules
 				
 				let allStatesList = wordsWhen (==',') allStates
 				let startStateList = wordsWhen (==',') startState
-				let endStatesList = wordsWhen (==',') endStates
+				let endStatesList = wordsWhen (==',') endStatesInput
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do
 						let classes = updateMinimalisationClasses automat $ initClasses automat
-						let newClassesAfter = splitClasses automat classes
-						mapM_ print newClassesAfter
-					Nothing -> error "Chybny DKA"
+						let minimalisationClasses = splitClasses automat classes
+						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						putStrLn $ id (printStates $ states minimalAutomat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta minimalAutomat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+						exitSuccess
+					Nothing -> error "Chybny DKA."
 				exitSuccess
 			else do
 				let filename = head filenames
@@ -151,11 +168,16 @@ main = do
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do 
 						let classes = updateMinimalisationClasses automat $ initClasses automat
-						let newClassesAfter = splitClasses automat classes
-						mapM_ print newClassesAfter
+						let minimalisationClasses = splitClasses automat classes
+						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						putStrLn $ id (printStates $ states minimalAutomat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta minimalAutomat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
-					Nothing -> error "Chybny DKA"
+					Nothing -> error "Chybny DKA."
 				exitSuccess
 
-	error "You need to specify one argument."
+	error "Musi specifikovat aspon jeden parameter."
 	exitFailure

@@ -25,6 +25,26 @@ data CellTransition = CellTransition {
 										endClass :: Int
 									} deriving (Eq, Ord, Show)
 
+getStatesFromMinimalisationClasses :: [MinimalisationClass] -> [State]
+getStatesFromMinimalisationClasses minimalisationClasses = map (number) minimalisationClasses
+
+getStartStateFromMinimalisationClasses :: (State, [MinimalisationClass]) -> State
+getStartStateFromMinimalisationClasses (initialStartState, minimalisationClasses) = do 
+													let filteredClass = (filter (\x -> elem initialStartState $ classStates x) minimalisationClasses) !! 0
+													number filteredClass
+
+getEndStatesFromMinimalisationClasses :: ([State], [MinimalisationClass]) -> [State]
+getEndStatesFromMinimalisationClasses (initialEndStates, minimalisationClasses) = do
+													let filteredClasses = filter (\x -> isSubsequenceOf initialEndStates $ classStates x) minimalisationClasses
+													map (number) filteredClasses
+
+getTransitionsFromOneMinimalisationClass :: MinimalisationClass -> [Transition]
+getTransitionsFromOneMinimalisationClass singleClass = map (\x -> Transition { from = number singleClass, to = endClass (x !! 0), value = transitionValue (x !! 0) }) (fromJust (cellTransitions singleClass))
+
+getTransitionsFromMinimalisationClasses :: [MinimalisationClass] -> [[Transition]]
+getTransitionsFromMinimalisationClasses minimalisationClasses = map getTransitionsFromOneMinimalisationClass minimalisationClasses
+
+
 -- Inicializuje pociatocne ekvivalencne triedy (vstupne a vystupne stavy)
 initClasses :: Automat -> [MinimalisationClass]
 initClasses automat = 	[	
