@@ -1,0 +1,8 @@
+test, test1 - zo zadania
+test2, test3, test4 - https://wis.fit.vutbr.cz/FIT/st/course-files-st.php?file=%2Fcourse%2FSTI-IT%2Fother%2FSTI-04-2017_10_13.pdf&cid=12330
+test5 - slajdy TIN
+test6 - https://www.tutorialspoint.com/automata_theory/dfa_minimization.htm
+test7 - http://www.cs.odu.edu/~toida/nerzic/390teched/regular/fa/min-fa.html
+test8, test11 - https://www.cs.wcupa.edu/rkline/fcs/dfa-min.html
+test12 - http://www.cs.cornell.edu/courses/cs2800/2013fa/Handouts/minimization.pdf
+test9 - http://www.informatik.uni-bremen.de/agbs/lehre/ss05/pi2/hintergrund/minimize_dfa.pdf

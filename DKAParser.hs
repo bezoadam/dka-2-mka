@@ -1,3 +1,6 @@
+--DKA-2-MKA
+--Adam Bezák xbezak01
+
 module DKAParser where
 
 import Data.List
@@ -5,10 +8,8 @@ import Data.Char
 
 import AutomatData
 
-------------------------------DKA PARSER----------------------------------
-
 -- Dlzka listu
-listnumber :: [String] -> Int 
+listnumber :: [a] -> Int 
 listnumber [] = 0
 listnumber (x:xs) = 1 + listnumber xs
 
@@ -77,7 +78,7 @@ loadAutomatData (allStatesList, startStateList, endStatesList, rules) = do
 																		Just Automat { 	states = map (read::String->State) allStatesList,
 																					delta = map makeTransition rules,
 																					sigma = getSigma transitions,
-																					initialSate = map (read::String->State) startStateList,
+																					initialState = read (startStateList !! 0) :: State,
 																					endStates = map (read::String->State) endStatesList
 																				}
 																else Nothing

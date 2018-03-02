@@ -1,3 +1,6 @@
+--DKA-2-MKA
+--Adam Bezák xbezak01
+
 module AutomatData where
 
 --Stav
@@ -15,7 +18,7 @@ data Automat = Automat {
 				states :: [State],
 				sigma :: [String],		-- Abeceda
 				delta :: [Transition],		-- Prechodova funkcia
-				initialSate :: [State],		-- Startovaci stav
+				initialState :: State,		-- Startovaci stav
 				endStates :: [State]		-- Mnozina koncovych stavov
 			} deriving (Show, Eq, Ord)
 
