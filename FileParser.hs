@@ -1,3 +1,6 @@
+--DKA-2-MKA
+--Adam Bezák xbezak01
+
 module FileParser where
 
 import System.Directory

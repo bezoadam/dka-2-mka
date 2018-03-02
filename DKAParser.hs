@@ -1,11 +1,12 @@
+--DKA-2-MKA
+--Adam Bezák xbezak01
+
 module DKAParser where
 
 import Data.List
 import Data.Char
 
 import AutomatData
-
-------------------------------DKA PARSER----------------------------------
 
 -- Dlzka listu
 listnumber :: [a] -> Int 
