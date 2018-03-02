@@ -85,7 +85,7 @@ getNewTransitionClass classNumber cellTransition = do
 splitTransitionClasses :: (Int, [CellTransition]) -> [CellTransition]
 splitTransitionClasses (classNumber, cellTransitions) = do
 										let firstEndClass = endClass $ cellTransitions !! 0
-										let getNewTransitionClassWithNumber = getNewTransitionClass classNumber
+										let getNewTransitionClassWithNumber = getNewTransitionClass firstEndClass
 										let otherTransitionClasses = filter (getNewTransitionClassWithNumber) cellTransitions
 										if (listnumber otherTransitionClasses /= 0) then otherTransitionClasses
 										else cellTransitions
@@ -98,28 +98,34 @@ findDifference [] _ = Nothing
 findDifference _ [] = Nothing
 findDifference (x:xs) (y:ys) = 	if x /= y then Just y else findDifference xs ys
 
-splitMinimalisationClass :: [MinimalisationClass] -> Maybe (Int, MinimalisationClass)
-splitMinimalisationClass [] = Nothing
-splitMinimalisationClass (x:xs) = do 
+splitMinimalisationClass :: (Int,[MinimalisationClass]) -> Maybe (Int, MinimalisationClass)
+splitMinimalisationClass (_,[]) = Nothing
+splitMinimalisationClass (numberOfClasses, (x:xs)) = do 
 							let cellTransitionsNew = fromJust (cellTransitions x)
 							let splittedTransitionClasses = map (\y -> splitTransitionClasses (number x, y)) cellTransitionsNew
 							let difference = findDifference cellTransitionsNew splittedTransitionClasses
 							case difference of
-								Just difference -> Just(number x, MinimalisationClass { number = (number x) + 1, classStates = getStartStates difference, cellTransitions = Nothing })
-								Nothing -> splitMinimalisationClass xs
+								Just difference ->  Just(number x, MinimalisationClass { number = numberOfClasses + 1, classStates = getStartStates difference, cellTransitions = Nothing })
+								Nothing -> splitMinimalisationClass (numberOfClasses, xs)
+
+mapInd :: (a -> Int -> b) -> [a] -> [b]
+mapInd f l = zipWith f l [0..]
+
+fixClassNumbers :: [MinimalisationClass] -> [MinimalisationClass]
+fixClassNumbers minimalisationClasses = mapInd (\x y -> MinimalisationClass { number = y + 1, classStates = classStates x, cellTransitions = cellTransitions x }) minimalisationClasses
 
 splitClasses :: Automat -> [MinimalisationClass] -> [MinimalisationClass]
 splitClasses automat minimalisationClasses = do
-					case splitMinimalisationClass minimalisationClasses of
+					case splitMinimalisationClass (listnumber minimalisationClasses, minimalisationClasses) of
 						Just (originalClassNumber, splittedClass) -> do
 							let filteredClass = filter (\x -> number x == originalClassNumber) minimalisationClasses !! 0
-							let newClass = MinimalisationClass { number = number splittedClass, classStates = classStates filteredClass \\ classStates splittedClass, cellTransitions = cellTransitions filteredClass }
+							let newClass = MinimalisationClass { number = number filteredClass, classStates = classStates filteredClass \\ classStates splittedClass, cellTransitions = cellTransitions filteredClass }
 							let newClasses = replace' filteredClass newClass minimalisationClasses
 							let newNewClasses = newClasses ++ [splittedClass]
 							let updatedNewClasses = updateMinimalisationClasses automat newNewClasses
-							--TODO FIX NUMBER
+							--TODO FIX NUMBER, ak je napr 1 2 a ma sa rozdelit na 1 2 3 tak sa to to rozdeli na 1 2 (1+1)
 							splitClasses automat updatedNewClasses
-							trace ("MINIMALCLASSES: \n" ++ show updatedNewClasses ++ "    \n REPLACE FILTERED CLASS:    \n " ++ show filteredClass ++ "    \n   REPLACE NEW CLASS          \n"  ++ show newClass) (splitClasses automat updatedNewClasses)
+							-- trace ("ORIGINALCLASSES: \n" ++ show minimalisationClasses ++ " \n MINIMALCLASSES: \n" ++ show updatedNewClasses ++ "    \n REPLACE FILTERED CLASS:    \n " ++ show filteredClass ++ "    \n   REPLACE NEW CLASS          \n"  ++ show newClass) (splitClasses automat updatedNewClasses)
 						Nothing -> minimalisationClasses
 
 

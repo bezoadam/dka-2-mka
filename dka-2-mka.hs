@@ -116,7 +116,7 @@ main = do
 						-- putStrLn ""
 						let newClassesAfter = splitClasses automat classes
 						print("ideme na to")
-						print newClassesAfter
+						mapM_ print newClassesAfter
 						exitSuccess
 					Nothing -> error "Chybny DKA"
 
