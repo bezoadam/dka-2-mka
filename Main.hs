@@ -1,11 +1,8 @@
 --DKA-2-MKA
---Adam Bezák xbezak01
+--Bc. Adam Bezák xbezak01
 
 import Control.Monad.State
-import qualified Data.IntMap as M
-import Data.Word
 import System.Environment
-import System.Directory
 import System.Exit
 import System.Console.GetOpt
 import System.IO
@@ -18,19 +15,22 @@ import Minimalisation
 import DKAParser
 import AutomatData
 
--------------------------------ARGUMENT PARSER----------------------
+-------------------------------ARGUMENTS----------------------
 
+-- Datovy typ reprezentujuci cestu k zadanym vstupnym suborom
 data Options = Options
 	{ 
 		optShowDKA  :: Maybe FilePath, 
 		optShowMKA	:: Maybe FilePath
 	} deriving Show
 
+-- Defaultne nezadane ziadne vstupne subory
 defaultOptions = Options
 	{
 		optShowDKA  = Nothing,
 		optShowMKA	= Nothing
 	}
+
 
 options :: [OptDescr (Options -> Options)]
 options =
@@ -42,33 +42,37 @@ options =
 	    "Nacitanie a transformacia DKA na MKA a vypis MKA na standartni vystup."
 	]
 
+-- Parsovanie vstupnych argumentov
 compilerOpts :: [String] -> IO (Options, [String])
 compilerOpts argv =
  	case getOpt Permute options argv of
      	(o,n,[]) -> return (foldl (flip id) defaultOptions o, n)
      	(_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
- 	where header = "Pouziti: OPTION [FILENAME]"
+ 	where header = "Pouzitie: OPTION [FILENAME]"
 
 -------------------------------OUTPUT-------------------------------
 
+-- Ziskanie mnoziny stavov v pozadovanom tvare
 printStates :: Show a => [a] -> String
 printStates = intercalate "," . map show
 
+-- Ziskanie prechodu v pozadovanom tvare
 printTransitions :: Transition -> String
 printTransitions transition = show (from transition) ++ "," ++ value transition ++ "," ++ show (to transition)
 
+-- Ziskanie minimalneho KA z povodneho DKA a ekv. tried
 getMKA :: (Automat, [MinimalisationClass]) -> Automat
 getMKA (automat, minimalisationClasses) = do 
-						let minimalStates = getStatesFromMinimalisationClasses minimalisationClasses
-						let minimalStartState = getStartStateFromMinimalisationClasses (initialState automat, minimalisationClasses)
-						let minimalEndStates = getEndStatesFromMinimalisationClasses (endStates automat, minimalisationClasses)
-						let minimalTransitions = concat $ getTransitionsFromMinimalisationClasses minimalisationClasses
-						let transitionsStrings = map printTransitions minimalTransitions
-						Automat { states = minimalStates, sigma = sigma automat, delta = minimalTransitions, initialState = minimalStartState, endStates = minimalEndStates }
+	let minimalStates = getStatesFromMinimalisationClasses minimalisationClasses
+	let minimalStartState = getStartStateFromMinimalisationClasses (initialState automat, minimalisationClasses)
+	let minimalEndStates = getEndStatesFromMinimalisationClasses (endStates automat, minimalisationClasses)
+	let minimalTransitions = concat $ getTransitionsFromMinimalisationClasses minimalisationClasses
+	let transitionsStrings = map printTransitions minimalTransitions
+	Automat { states = minimalStates, sigma = sigma automat, delta = minimalTransitions, initialState = minimalStartState, endStates = minimalEndStates }
 
 -------------------------------INPUT--------------------------------
 
---Nacita vstup zo stdin
+--Nacita vstupne pravidla zo stdin
 getRules :: IO [String]
 getRules = go ""
 	where go contents = do
@@ -86,18 +90,67 @@ main = do
 	(opts, filenames) <- compilerOpts argv
 
 	when (listnumber filenames > 1) $ do
-		error "Privela vstupnych suborov"
+		error "Privela vstupnych suborov."
 
+	-- "-i -t"
 	when ((not $ isNothing $ optShowDKA opts) && (not $ isNothing $ optShowMKA opts)) $ do
 		if null filenames
 			then do
-				print "SHOWDKA, SHOWMKA STDOUT"
-				exitSuccess
-			else do
-				print "SHOWDKA, SHOWMKA FILE"
-				exitSuccess
+				allStates <- getLine
+				startState <- getLine
+				endStatesInput <- getLine
+				rules <- getRules
+				
+				let allStatesList = wordsWhen (==',') allStates
+				let startStateList = wordsWhen (==',') startState
+				let endStatesList = wordsWhen (==',') endStatesInput
 
-	-- "-t"
+				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
+					Just automat -> do
+						putStrLn $ id (printStates $ states automat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta automat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+
+						putStrLn ""
+
+						let classes = updateMinimalisationClasses automat $ initClasses automat
+						let minimalisationClasses = splitClasses automat classes
+						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						putStrLn $ id (printStates $ states minimalAutomat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta minimalAutomat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+						exitSuccess
+					Nothing -> error "Chybne zadany DKA."
+			else do
+				let filename = head filenames
+				lines <- customFileParser filename
+				let (allStatesList, startStateList, endStatesList, rules) = loadDKA $ words lines
+
+				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
+					Just automat -> do
+						putStrLn $ id (printStates $ states automat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta automat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+
+						putStrLn ""
+
+						let classes = updateMinimalisationClasses automat $ initClasses automat
+						let minimalisationClasses = splitClasses automat classes
+						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						putStrLn $ id (printStates $ states minimalAutomat)
+						print $ initialState automat
+						putStrLn $ id (printStates $ endStates automat)
+						let transitionsStrings = map printTransitions $ delta minimalAutomat
+						mapM_ (\x -> putStrLn $ id x) transitionsStrings
+						exitSuccess
+					Nothing -> error "Chybne zadany DKA."
+	-- "-i"
 	when (not $ isNothing $ optShowDKA opts) $ do
 		if null filenames
 			then do
@@ -118,7 +171,7 @@ main = do
 						let transitionsStrings = map printTransitions $ delta automat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
-					Nothing -> error "Chybny DKA."
+					Nothing -> error "Chybne zadany DKA."
 			else do
 				let filename = head filenames
 				lines <- customFileParser filename
@@ -132,9 +185,9 @@ main = do
 						let transitionsStrings = map printTransitions $ delta automat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
-					Nothing -> error "Chybny DKA."
+					Nothing -> error "Chybne zadany DKA."
 
-	-- "-i"
+	-- "-t"
 	when (not $ isNothing $ optShowMKA opts) $ do
 		if null filenames
 			then do
@@ -158,7 +211,7 @@ main = do
 						let transitionsStrings = map printTransitions $ delta minimalAutomat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
-					Nothing -> error "Chybny DKA."
+					Nothing -> error "Chybne zadany DKA."
 				exitSuccess
 			else do
 				let filename = head filenames
@@ -176,8 +229,8 @@ main = do
 						let transitionsStrings = map printTransitions $ delta minimalAutomat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
-					Nothing -> error "Chybny DKA."
+					Nothing -> error "Chybne zadany DKA."
 				exitSuccess
 
-	error "Musi specifikovat aspon jeden parameter."
+	error "Musis specifikovat aspon jeden parameter."
 	exitFailure

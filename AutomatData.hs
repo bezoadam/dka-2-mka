@@ -1,26 +1,28 @@
 --DKA-2-MKA
---Adam Bezák xbezak01
+--BC. Adam Bezák xbezak01
 
 module AutomatData where
 
---Stav
+-- Stav
 type State = Int
 
---Prechod
-data Transition = Transition {
-							from :: State,
-							to :: State,
-							value :: String
-						} deriving (Eq, Ord, Show)
+-- Datovy typ reprezentujuci jeden rechod
+data Transition = Transition 
+	{
+		from :: State,
+		to :: State,
+		value :: String
+	} deriving (Eq, Ord, Show)
 
 -- Definicia KA
-data Automat = Automat {
-				states :: [State],
-				sigma :: [String],		-- Abeceda
-				delta :: [Transition],		-- Prechodova funkcia
-				initialState :: State,		-- Startovaci stav
-				endStates :: [State]		-- Mnozina koncovych stavov
-			} deriving (Show, Eq, Ord)
+data Automat = Automat 
+	{
+		states :: [State],
+		sigma :: [String],		-- Abeceda
+		delta :: [Transition],		-- Prechodova funkcia
+		initialState :: State,		-- Startovaci stav
+		endStates :: [State]		-- Mnozina koncovych stavov
+	} deriving (Show, Eq, Ord)
 
 -- Odstrani duplikaty z listu
 removeDuplicates :: Eq a => [a] -> [a]
@@ -31,7 +33,7 @@ removeDuplicates = rdHelper []
               | otherwise = rdHelper (seen ++ [x]) xs
 
 -- Rozdeli String na zaklade delimetra
-wordsWhen     :: (Char -> Bool) -> String -> [String]
+wordsWhen :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =  case dropWhile p s of
                       "" -> []
                       s' -> w : wordsWhen p s''
@@ -40,8 +42,8 @@ wordsWhen p s =  case dropWhile p s of
 -- Pomocna funkcia na vytvorenie prechodu
 makeTransition :: String -> Transition
 makeTransition rule = do
-					let words = wordsWhen (==',') rule
-					Transition  { from = read (words !! 0) :: State, to = read (words !! 2) :: State, value = (words !! 1) }
+	let words = wordsWhen (==',') rule
+	Transition  { from = read (words !! 0) :: State, to = read (words !! 2) :: State, value = (words !! 1) }
 
 -- Pomocna funkcia na vytvorenie abecedy
 getAlphabetChar :: Transition -> String
