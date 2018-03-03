@@ -1,10 +1,11 @@
 --DKA-2-MKA
---Adam Bezák xbezak01
+--Bc. Adam Bezák xbezak01
 
 module FileParser where
 
 import System.Directory
 
+-- Zisti ci zadany subor existuje a ak ano vrati jeho obsah
 customFileParser :: String -> IO String
 customFileParser filename = do
 	fileExists <- doesFileExist filename
