@@ -21,4 +21,10 @@ Taktiez overuje spravnost zadaneho vstupneho DKA.
 ..* Zda sa pouzite stavy v pravidlach, koncovych stavoch a startovaci stav nachadzaju v mnozine vsetkych stavov.
 ..* Zda automat prijma len abecedu zlozenu z malych pismen [a-z]
 
-Algoritmus minimalizacie 
+Algoritmus minimalizacie funguje presne podla algortimu rieseneho na cviceni k predmetu STI.
+V prvom kroku sa rucne vytvoria dve ekvivalencne triedy zlozene z mnozin koncovych stavov a vsetkych ostatnych stavov.
+Nainicializuju sa prvotne "bunky tabulky" - pre kazdy znak z abecedy a kazdy prechod sa vytvori jedna `CellTransition` pozostavajuca zo startovacieho stavu, daneho znaku a cisla ekvivalencnej triedy v 
+ktorej lezi koncovy stav prechodu.
+Po nainicializovani prvotnych ekvivalencnych tried sa zacne rekurzivne prechadzat kazda ekv. trieda a zistuje sa zda sa musi rozdelit. Rozdelenie spociva v tom, ze z danej ekv. triedy
+sa odstrania tie stavy ktore sa presuvaju do novej ekv. triedy a nova ekv. trieda sa prida na koniec listu ekv. tried. Po rozdeleni je nutne znovu prepocitat hodnoty `CellTransition` (buniek tabulky).
+Funkcia sa rekurzivne vola az pokedy uz nie je co rozdelovat.

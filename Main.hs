@@ -150,7 +150,7 @@ main = do
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
 					Nothing -> error "Chybne zadany DKA."
-	-- "-t"
+	-- "-i"
 	when (not $ isNothing $ optShowDKA opts) $ do
 		if null filenames
 			then do
@@ -187,7 +187,7 @@ main = do
 						exitSuccess
 					Nothing -> error "Chybne zadany DKA."
 
-	-- "-i"
+	-- "-t"
 	when (not $ isNothing $ optShowMKA opts) $ do
 		if null filenames
 			then do
