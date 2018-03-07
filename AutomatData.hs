@@ -53,4 +53,4 @@ getAlphabetChar transition = value transition
 
 -- Vrati abecedu z prechodov
 getSigma :: [Transition] -> [String]
-getSigma transitions = trace ("somtututututu") removeDuplicates (map (getAlphabetChar) transitions)
+getSigma transitions = removeDuplicates (map (getAlphabetChar) transitions)

@@ -5,6 +5,7 @@ module Minimalisation where
 
 import Data.List
 import Data.Maybe
+import Debug.Trace
 
 import AutomatData
 import DKAParser (listnumber)
@@ -25,46 +26,31 @@ data CellTransition = CellTransition
 		endClass :: Int
 	} deriving (Eq, Ord, Show)
 
+------------------DKA -> UDKA------------------------------
 
--- updateTransitions :: [State] -> [String] -> [Transition] -> Transition -> [Transition]
--- updateTransitions states sigma delta singleTransition = do
--- 	let transitionsWithSameStartState = filter (\x -> from x == from singleTransition) delta
--- 	if (listnumber transitionsWithSameStartState /= listnumber sigma) then do
--- 		let filteredSigma = map (\x -> value x) transitionsWithSameStartState
--- 		let missingSigma = sigma \\ filteredSigma
--- 		let missingTransitions = map (\x -> Transition { from = from singleTransition, to = 6 , value = x }) missingSigma
--- 		[singleTransition] ++ missingTransitions
--- 	else [singleTransition]
-
--- updateAutomat :: Automat -> Automat
--- updateAutomat automat = do
--- 	let checkingState = updateTransitions (states automat) (sigma automat) (delta automat)
--- 	let updatedTransitions = concat (map (checkingState) (delta automat))
--- 	if (updatedTransitions /= delta automat) then do
--- 		let newState = listnumber (states automat) + 1
--- 		let xxx = map (\x -> Transition { from = newState, to = newState, value = x } ) (sigma automat)
--- 		Automat { states = states automat ++ [newState], sigma = sigma automat, delta = updatedTransitions ++ xxx, initialState = initialState automat, endStates = endStates automat }
--- 	else Automat { states = states automat, sigma = sigma automat, delta = updatedTransitions, initialState = initialState automat, endStates = endStates automat }
-
-updateTransitions :: [String] -> [Transition] -> State -> [Transition]
-updateTransitions sigma delta currentState = do
+updateTransitions :: State -> [String] -> [Transition] -> State -> [Transition]
+updateTransitions sinkState sigma delta currentState = do
 	let transitionsWithSameStartState = filter (\x -> from x == currentState) delta
 	if (listnumber transitionsWithSameStartState /= listnumber sigma) then do
 		let sigmas = map (\x -> value x) transitionsWithSameStartState
 		let missingSigma = sigma \\ sigmas
-		let missingTransitions = map (\x -> Transition { from = currentState, to = 6 , value = x }) missingSigma
+		let missingTransitions = map (\x -> Transition { from = currentState, to = sinkState, value = x }) missingSigma
 		delta ++ missingTransitions
 	else delta
 
+-- Uprava automatu na Uplny DKA
 updateAutomat :: Automat -> Automat
 updateAutomat automat = do
-	let checkingStatePredicate = updateTransitions (sigma automat) (delta automat)
+	let checkingStatePredicate = updateTransitions ((listnumber (states automat)) + 1) (sigma automat) (delta automat)
 	let updatedTransitions = concat (map (\x -> checkingStatePredicate x) (states automat))
 	if (updatedTransitions /= delta automat) then do
 		let newState = listnumber (states automat) + 1
-		let xxx = map (\x -> Transition { from = newState, to = newState, value = x } ) (sigma automat)
-		Automat { states = states automat ++ [newState], sigma = sigma automat, delta = updatedTransitions ++ xxx, initialState = initialState automat, endStates = endStates automat }
+		let newTransitions = map (\x -> Transition { from = newState, to = newState, value = x } ) (sigma automat)
+		Automat { states = states automat ++ [newState], sigma = sigma automat, delta = updatedTransitions ++ newTransitions, initialState = initialState automat, endStates = endStates automat }
 	else Automat { states = states automat, sigma = sigma automat, delta = updatedTransitions, initialState = initialState automat, endStates = endStates automat }
+
+------------------------------------------------------------
+
 
 -- Ziskanie mnoziny vsetkych stavov z mnoziny ekvivalencnych tried (na zaklade poradoveho cisla triedy)
 getStatesFromMinimalisationClasses :: [MinimalisationClass] -> [State]
@@ -79,7 +65,8 @@ getStartStateFromMinimalisationClasses (initialStartState, minimalisationClasses
 -- Ziskanie koncovych stavov z mnoziny ekvivalencnych tried
 getEndStatesFromMinimalisationClasses :: ([State], [MinimalisationClass]) -> [State]
 getEndStatesFromMinimalisationClasses (initialEndStates, minimalisationClasses) = do
-	let filteredClasses = filter (\x -> isSubsequenceOf initialEndStates $ classStates x) minimalisationClasses
+	let filteredClasses = filter (\x -> (listnumber (intersect (classStates x) (initialEndStates)) > 0)) minimalisationClasses
+	-- let filteredClasses = filter (\x -> isSubsequenceOf initialEndStates $ classStates x) minimalisationClasses
 	map (number) filteredClasses
 
 -- Ziskanie mnoziny prechodov z jednej ekvivalencnej triedy 

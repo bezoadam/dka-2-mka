@@ -11,7 +11,7 @@ for test in ${tests[@]}
 do
 	echo "---- Zacinam test: "$test" "
 	input="input/"${test}
-	./dka-2-mka -i input/$test
+	./dka-2-mka -t input/$test
 done
 
 
