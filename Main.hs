@@ -115,12 +115,13 @@ main = do
 
 						putStrLn ""
 
-						let classes = updateMinimalisationClasses automat $ initClasses automat
-						let minimalisationClasses = splitClasses automat classes
-						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						let updatedAutomat = (updateAutomat automat)
+						let classes = updateMinimalisationClasses updatedAutomat $ initClasses updatedAutomat
+						let minimalisationClasses = splitClasses updatedAutomat classes
+						let minimalAutomat = getMKA (updatedAutomat, minimalisationClasses)
 						putStrLn $ id (printStates $ states minimalAutomat)
-						print $ initialState automat
-						putStrLn $ id (printStates $ endStates automat)
+						print $ initialState minimalAutomat
+						putStrLn $ id (printStates $ endStates minimalAutomat)
 						let transitionsStrings = map printTransitions $ delta minimalAutomat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
@@ -140,12 +141,13 @@ main = do
 
 						putStrLn ""
 
-						let classes = updateMinimalisationClasses automat $ initClasses automat
-						let minimalisationClasses = splitClasses automat classes
-						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						let updatedAutomat = (updateAutomat automat)
+						let classes = updateMinimalisationClasses updatedAutomat $ initClasses updatedAutomat
+						let minimalisationClasses = splitClasses updatedAutomat classes
+						let minimalAutomat = getMKA (updatedAutomat, minimalisationClasses)
 						putStrLn $ id (printStates $ states minimalAutomat)
-						print $ initialState automat
-						putStrLn $ id (printStates $ endStates automat)
+						print $ initialState minimalAutomat
+						putStrLn $ id (printStates $ endStates minimalAutomat)
 						let transitionsStrings = map printTransitions $ delta minimalAutomat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
@@ -202,12 +204,13 @@ main = do
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do
-						let classes = updateMinimalisationClasses automat $ initClasses automat
-						let minimalisationClasses = splitClasses automat classes
-						let minimalAutomat = getMKA (automat, minimalisationClasses)
+						let updatedAutomat = (updateAutomat automat)
+						let classes = updateMinimalisationClasses updatedAutomat $ initClasses updatedAutomat
+						let minimalisationClasses = splitClasses updatedAutomat classes
+						let minimalAutomat = getMKA (updatedAutomat, minimalisationClasses)
 						putStrLn $ id (printStates $ states minimalAutomat)
-						print $ initialState automat
-						putStrLn $ id (printStates $ endStates automat)
+						print $ initialState minimalAutomat
+						putStrLn $ id (printStates $ endStates minimalAutomat)
 						let transitionsStrings = map printTransitions $ delta minimalAutomat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess
@@ -219,13 +222,14 @@ main = do
 				let (allStatesList, startStateList, endStatesList, rules) = loadDKA $ words lines
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
-					Just automat -> do 
-						let classes = updateMinimalisationClasses automat $ initClasses automat
-						let minimalisationClasses = splitClasses automat classes
-						let minimalAutomat = getMKA (automat, minimalisationClasses)
+					Just automat -> do
+						let updatedAutomat = (updateAutomat automat)
+						let classes = updateMinimalisationClasses updatedAutomat $ initClasses updatedAutomat
+						let minimalisationClasses = splitClasses updatedAutomat classes
+						let minimalAutomat = getMKA (updatedAutomat, minimalisationClasses)
 						putStrLn $ id (printStates $ states minimalAutomat)
-						print $ initialState automat
-						putStrLn $ id (printStates $ endStates automat)
+						print $ initialState minimalAutomat
+						putStrLn $ id (printStates $ endStates minimalAutomat)
 						let transitionsStrings = map printTransitions $ delta minimalAutomat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess

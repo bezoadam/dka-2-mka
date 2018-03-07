@@ -3,6 +3,7 @@
 
 module AutomatData where
 
+
 -- Stav
 type State = Int
 

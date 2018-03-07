@@ -25,6 +25,32 @@ data CellTransition = CellTransition
 		endClass :: Int
 	} deriving (Eq, Ord, Show)
 
+------------------DKA -> UDKA------------------------------
+
+updateTransitions :: State -> [String] -> [Transition] -> State -> [Transition]
+updateTransitions sinkState sigma delta currentState = do
+	let transitionsWithSameStartState = filter (\x -> from x == currentState) delta
+	if (listnumber transitionsWithSameStartState /= listnumber sigma) then do
+		let sigmas = map (\x -> value x) transitionsWithSameStartState
+		let missingSigma = sigma \\ sigmas
+		let missingTransitions = map (\x -> Transition { from = currentState, to = sinkState, value = x }) missingSigma
+		delta ++ missingTransitions
+	else delta
+
+-- Uprava automatu na Uplny DKA
+updateAutomat :: Automat -> Automat
+updateAutomat automat = do
+	let checkingStatePredicate = updateTransitions ((listnumber (states automat)) + 1) (sigma automat) (delta automat)
+	let updatedTransitions = concat (map (\x -> checkingStatePredicate x) (states automat))
+	if (updatedTransitions /= delta automat) then do
+		let newState = listnumber (states automat) + 1
+		let newTransitions = map (\x -> Transition { from = newState, to = newState, value = x } ) (sigma automat)
+		Automat { states = states automat ++ [newState], sigma = sigma automat, delta = updatedTransitions ++ newTransitions, initialState = initialState automat, endStates = endStates automat }
+	else Automat { states = states automat, sigma = sigma automat, delta = updatedTransitions, initialState = initialState automat, endStates = endStates automat }
+
+------------------------------------------------------------
+
+
 -- Ziskanie mnoziny vsetkych stavov z mnoziny ekvivalencnych tried (na zaklade poradoveho cisla triedy)
 getStatesFromMinimalisationClasses :: [MinimalisationClass] -> [State]
 getStatesFromMinimalisationClasses minimalisationClasses = map (number) minimalisationClasses
@@ -38,7 +64,7 @@ getStartStateFromMinimalisationClasses (initialStartState, minimalisationClasses
 -- Ziskanie koncovych stavov z mnoziny ekvivalencnych tried
 getEndStatesFromMinimalisationClasses :: ([State], [MinimalisationClass]) -> [State]
 getEndStatesFromMinimalisationClasses (initialEndStates, minimalisationClasses) = do
-	let filteredClasses = filter (\x -> isSubsequenceOf initialEndStates $ classStates x) minimalisationClasses
+	let filteredClasses = filter (\x -> (listnumber (intersect (classStates x) (initialEndStates)) > 0)) minimalisationClasses
 	map (number) filteredClasses
 
 -- Ziskanie mnoziny prechodov z jednej ekvivalencnej triedy 
@@ -112,7 +138,7 @@ getStartStates :: [CellTransition] -> [State]
 getStartStates cellTransitions = map (\x -> startState x) cellTransitions
 
 -- Vrati rozdiel dvoch prechodov 
-findDifference :: [[CellTransition]] -> [[CellTransition]] -> Maybe [CellTransition]
+findDifference :: Eq a => [[a]] -> [[a]] -> Maybe [a]
 findDifference [] _ = Nothing
 findDifference _ [] = Nothing
 findDifference (x:xs) (y:ys) = 	if x /= y then Just y else findDifference xs ys

@@ -55,11 +55,10 @@ checkRuleFormat allStates rule = do
 			let endState = ruleList !! 2
 			if (isInteger startState && isInteger endState && isAsciiLower symbol)
 				then do
-					if (elem startState allStates &&  elem endState allStates) then True
+					if (elem startState allStates && elem endState allStates) then True
 						else False
 				else False
 	else False
-
 
 -- Skontroluje spravnost vsetkych stavov
 checkRules :: ([String], [String]) -> Bool
