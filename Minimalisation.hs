@@ -5,7 +5,6 @@ module Minimalisation where
 
 import Data.List
 import Data.Maybe
-import Debug.Trace
 
 import AutomatData
 import DKAParser (listnumber)
@@ -66,7 +65,6 @@ getStartStateFromMinimalisationClasses (initialStartState, minimalisationClasses
 getEndStatesFromMinimalisationClasses :: ([State], [MinimalisationClass]) -> [State]
 getEndStatesFromMinimalisationClasses (initialEndStates, minimalisationClasses) = do
 	let filteredClasses = filter (\x -> (listnumber (intersect (classStates x) (initialEndStates)) > 0)) minimalisationClasses
-	-- let filteredClasses = filter (\x -> isSubsequenceOf initialEndStates $ classStates x) minimalisationClasses
 	map (number) filteredClasses
 
 -- Ziskanie mnoziny prechodov z jednej ekvivalencnej triedy 

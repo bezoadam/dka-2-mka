@@ -5,7 +5,6 @@ module DKAParser where
 
 import Data.List
 import Data.Char
-import Debug.Trace
 
 import AutomatData
 

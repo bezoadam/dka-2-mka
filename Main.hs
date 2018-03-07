@@ -9,7 +9,6 @@ import System.IO
 import Data.Maybe
 import Data.Typeable
 import Data.List
-import Debug.Trace
 
 import FileParser
 import Minimalisation

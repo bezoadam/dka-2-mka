@@ -3,7 +3,6 @@
 
 module AutomatData where
 
-import Debug.Trace
 
 -- Stav
 type State = Int
