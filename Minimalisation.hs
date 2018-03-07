@@ -26,21 +26,45 @@ data CellTransition = CellTransition
 	} deriving (Eq, Ord, Show)
 
 
-updateTransitions :: [State] -> [String] -> [Transition] -> Transition -> [Transition]
-updateTransitions states sigma delta singleTransition = do
-	let transitionsWithSameStartState = filter (\x -> from x == from singleTransition) delta
+-- updateTransitions :: [State] -> [String] -> [Transition] -> Transition -> [Transition]
+-- updateTransitions states sigma delta singleTransition = do
+-- 	let transitionsWithSameStartState = filter (\x -> from x == from singleTransition) delta
+-- 	if (listnumber transitionsWithSameStartState /= listnumber sigma) then do
+-- 		let filteredSigma = map (\x -> value x) transitionsWithSameStartState
+-- 		let missingSigma = sigma \\ filteredSigma
+-- 		let missingTransitions = map (\x -> Transition { from = from singleTransition, to = 6 , value = x }) missingSigma
+-- 		[singleTransition] ++ missingTransitions
+-- 	else [singleTransition]
+
+-- updateAutomat :: Automat -> Automat
+-- updateAutomat automat = do
+-- 	let checkingState = updateTransitions (states automat) (sigma automat) (delta automat)
+-- 	let updatedTransitions = concat (map (checkingState) (delta automat))
+-- 	if (updatedTransitions /= delta automat) then do
+-- 		let newState = listnumber (states automat) + 1
+-- 		let xxx = map (\x -> Transition { from = newState, to = newState, value = x } ) (sigma automat)
+-- 		Automat { states = states automat ++ [newState], sigma = sigma automat, delta = updatedTransitions ++ xxx, initialState = initialState automat, endStates = endStates automat }
+-- 	else Automat { states = states automat, sigma = sigma automat, delta = updatedTransitions, initialState = initialState automat, endStates = endStates automat }
+
+updateTransitions :: [String] -> [Transition] -> State -> [Transition]
+updateTransitions sigma delta currentState = do
+	let transitionsWithSameStartState = filter (\x -> from x == currentState) delta
 	if (listnumber transitionsWithSameStartState /= listnumber sigma) then do
-		let filteredSigma = map (\x -> value x) transitionsWithSameStartState
-		let missingSigma = sigma \\ filteredSigma
-		let missingTransitions = map (\x -> Transition { from = from singleTransition, to = 6 , value = x }) missingSigma
-		[singleTransition] ++ missingTransitions
-	else [singleTransition]
+		let sigmas = map (\x -> value x) transitionsWithSameStartState
+		let missingSigma = sigma \\ sigmas
+		let missingTransitions = map (\x -> Transition { from = currentState, to = 6 , value = x }) missingSigma
+		delta ++ missingTransitions
+	else delta
 
 updateAutomat :: Automat -> Automat
 updateAutomat automat = do
-	let checkingState = updateTransitions (states automat) (sigma automat) (delta automat)
-	let updatedTransitions = concat (map (checkingState) (delta automat))
-	Automat { states = states automat, sigma = sigma automat, delta = updatedTransitions, initialState = initialState automat, endStates = endStates automat }
+	let checkingStatePredicate = updateTransitions (sigma automat) (delta automat)
+	let updatedTransitions = concat (map (\x -> checkingStatePredicate x) (states automat))
+	if (updatedTransitions /= delta automat) then do
+		let newState = listnumber (states automat) + 1
+		let xxx = map (\x -> Transition { from = newState, to = newState, value = x } ) (sigma automat)
+		Automat { states = states automat ++ [newState], sigma = sigma automat, delta = updatedTransitions ++ xxx, initialState = initialState automat, endStates = endStates automat }
+	else Automat { states = states automat, sigma = sigma automat, delta = updatedTransitions, initialState = initialState automat, endStates = endStates automat }
 
 -- Ziskanie mnoziny vsetkych stavov z mnoziny ekvivalencnych tried (na zaklade poradoveho cisla triedy)
 getStatesFromMinimalisationClasses :: [MinimalisationClass] -> [State]
@@ -129,7 +153,7 @@ getStartStates :: [CellTransition] -> [State]
 getStartStates cellTransitions = map (\x -> startState x) cellTransitions
 
 -- Vrati rozdiel dvoch prechodov 
-findDifference :: [[CellTransition]] -> [[CellTransition]] -> Maybe [CellTransition]
+findDifference :: Eq a => [[a]] -> [[a]] -> Maybe [a]
 findDifference [] _ = Nothing
 findDifference _ [] = Nothing
 findDifference (x:xs) (y:ys) = 	if x /= y then Just y else findDifference xs ys

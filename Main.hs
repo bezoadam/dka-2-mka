@@ -223,10 +223,9 @@ main = do
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
 					Just automat -> do
 						let updatedAutomat = (updateAutomat automat)
-						print updatedAutomat
+						-- print updatedAutomat
 						let classes = updateMinimalisationClasses updatedAutomat $ initClasses updatedAutomat
 						let minimalisationClasses = splitClasses updatedAutomat classes
-						print minimalisationClasses
 						let minimalAutomat = getMKA (updatedAutomat, minimalisationClasses)
 						print minimalAutomat
 						putStrLn $ id (printStates $ states minimalAutomat)

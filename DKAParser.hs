@@ -52,7 +52,7 @@ checkRuleFormat allStates rule = do
 	if (((length $ ruleList) == 3) && ((length $ ruleList !! 1) == 1))
 		then do
 			let startState = ruleList !! 0
-			let symbol = trace ("head") head $ ruleList !! 1
+			let symbol = head $ ruleList !! 1
 			let endState = ruleList !! 2
 			if (isInteger startState && isInteger endState && isAsciiLower symbol)
 				then do
@@ -66,7 +66,7 @@ checkRules :: ([String], [String]) -> Bool
 checkRules (rules, allStatesList) = do
 	if (length rules /= 0) then do 
 		let checkRulePredicate = checkRuleFormat allStatesList
-		trace (show "test") (all (checkRulePredicate) rules)
+		all (checkRulePredicate) rules
 	else False
 
 -- Vytvorenie struktury automatu
@@ -75,7 +75,7 @@ loadAutomatData (allStatesList, startStateList, endStatesList, rules) = do
 	if (checkStatesFormat allStatesList && checkStartState startStateList && 
 		checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
 		checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
-			let transitions = trace ("somttuuu") map makeTransition rules
+			let transitions = map makeTransition rules
 			Just Automat { 	states = map (read::String->State) allStatesList,
 						delta = map makeTransition rules,
 						sigma = getSigma transitions,

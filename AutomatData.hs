@@ -45,7 +45,7 @@ wordsWhen p s =  case dropWhile p s of
 makeTransition :: String -> Transition
 makeTransition rule = do
 	let words = wordsWhen (==',') rule
-	trace ("rule: " ++ rule) Transition  { from = read (words !! 0) :: State, to = read (words !! 2) :: State, value = (words !! 1) }
+	Transition  { from = read (words !! 0) :: State, to = read (words !! 2) :: State, value = (words !! 1) }
 
 -- Pomocna funkcia na vytvorenie abecedy
 getAlphabetChar :: Transition -> String
