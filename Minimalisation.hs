@@ -25,6 +25,23 @@ data CellTransition = CellTransition
 		endClass :: Int
 	} deriving (Eq, Ord, Show)
 
+
+updateTransitions :: [State] -> [String] -> [Transition] -> Transition -> [Transition]
+updateTransitions states sigma delta singleTransition = do
+	let transitionsWithSameStartState = filter (\x -> from x == from singleTransition) delta
+	if (listnumber transitionsWithSameStartState /= listnumber sigma) then do
+		let filteredSigma = map (\x -> value x) transitionsWithSameStartState
+		let missingSigma = sigma \\ filteredSigma
+		let missingTransitions = map (\x -> Transition { from = from singleTransition, to = 6 , value = x }) missingSigma
+		[singleTransition] ++ missingTransitions
+	else [singleTransition]
+
+updateAutomat :: Automat -> Automat
+updateAutomat automat = do
+	let checkingState = updateTransitions (states automat) (sigma automat) (delta automat)
+	let updatedTransitions = concat (map (checkingState) (delta automat))
+	Automat { states = states automat, sigma = sigma automat, delta = updatedTransitions, initialState = initialState automat, endStates = endStates automat }
+
 -- Ziskanie mnoziny vsetkych stavov z mnoziny ekvivalencnych tried (na zaklade poradoveho cisla triedy)
 getStatesFromMinimalisationClasses :: [MinimalisationClass] -> [State]
 getStatesFromMinimalisationClasses minimalisationClasses = map (number) minimalisationClasses

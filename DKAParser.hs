@@ -5,6 +5,7 @@ module DKAParser where
 
 import Data.List
 import Data.Char
+import Debug.Trace
 
 import AutomatData
 
@@ -51,22 +52,21 @@ checkRuleFormat allStates rule = do
 	if (((length $ ruleList) == 3) && ((length $ ruleList !! 1) == 1))
 		then do
 			let startState = ruleList !! 0
-			let symbol = head $ ruleList !! 1
+			let symbol = trace ("head") head $ ruleList !! 1
 			let endState = ruleList !! 2
 			if (isInteger startState && isInteger endState && isAsciiLower symbol)
 				then do
-					if (elem startState allStates &&  elem endState allStates) then True
+					if (elem startState allStates && elem endState allStates) then True
 						else False
 				else False
 	else False
-
 
 -- Skontroluje spravnost vsetkych stavov
 checkRules :: ([String], [String]) -> Bool
 checkRules (rules, allStatesList) = do
 	if (length rules /= 0) then do 
 		let checkRulePredicate = checkRuleFormat allStatesList
-		all (checkRulePredicate) rules
+		trace (show "test") (all (checkRulePredicate) rules)
 	else False
 
 -- Vytvorenie struktury automatu
@@ -75,7 +75,7 @@ loadAutomatData (allStatesList, startStateList, endStatesList, rules) = do
 	if (checkStatesFormat allStatesList && checkStartState startStateList && 
 		checkStatesFormat endStatesList && checkIfSublist (startStateList, allStatesList) && 
 		checkIfSublist (endStatesList, allStatesList) && checkRules (rules, allStatesList)) then do
-			let transitions = map makeTransition rules
+			let transitions = trace ("somttuuu") map makeTransition rules
 			Just Automat { 	states = map (read::String->State) allStatesList,
 						delta = map makeTransition rules,
 						sigma = getSigma transitions,

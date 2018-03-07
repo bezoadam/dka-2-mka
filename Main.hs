@@ -9,6 +9,7 @@ import System.IO
 import Data.Maybe
 import Data.Typeable
 import Data.List
+import Debug.Trace
 
 import FileParser
 import Minimalisation
@@ -217,15 +218,20 @@ main = do
 				let filename = head filenames
 				lines <- customFileParser filename
 				let (allStatesList, startStateList, endStatesList, rules) = loadDKA $ words lines
+				print (rules)
 
 				case loadAutomatData (allStatesList, startStateList, endStatesList, rules) of
-					Just automat -> do 
-						let classes = updateMinimalisationClasses automat $ initClasses automat
-						let minimalisationClasses = splitClasses automat classes
-						let minimalAutomat = getMKA (automat, minimalisationClasses)
+					Just automat -> do
+						let updatedAutomat = (updateAutomat automat)
+						print updatedAutomat
+						let classes = updateMinimalisationClasses updatedAutomat $ initClasses updatedAutomat
+						let minimalisationClasses = splitClasses updatedAutomat classes
+						print minimalisationClasses
+						let minimalAutomat = getMKA (updatedAutomat, minimalisationClasses)
+						print minimalAutomat
 						putStrLn $ id (printStates $ states minimalAutomat)
-						print $ initialState automat
-						putStrLn $ id (printStates $ endStates automat)
+						print $ initialState updatedAutomat
+						putStrLn $ id (printStates $ endStates updatedAutomat)
 						let transitionsStrings = map printTransitions $ delta minimalAutomat
 						mapM_ (\x -> putStrLn $ id x) transitionsStrings
 						exitSuccess

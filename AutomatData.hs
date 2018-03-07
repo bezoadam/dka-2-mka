@@ -3,6 +3,8 @@
 
 module AutomatData where
 
+import Debug.Trace
+
 -- Stav
 type State = Int
 
@@ -43,7 +45,7 @@ wordsWhen p s =  case dropWhile p s of
 makeTransition :: String -> Transition
 makeTransition rule = do
 	let words = wordsWhen (==',') rule
-	Transition  { from = read (words !! 0) :: State, to = read (words !! 2) :: State, value = (words !! 1) }
+	trace ("rule: " ++ rule) Transition  { from = read (words !! 0) :: State, to = read (words !! 2) :: State, value = (words !! 1) }
 
 -- Pomocna funkcia na vytvorenie abecedy
 getAlphabetChar :: Transition -> String
@@ -51,4 +53,4 @@ getAlphabetChar transition = value transition
 
 -- Vrati abecedu z prechodov
 getSigma :: [Transition] -> [String]
-getSigma transitions = removeDuplicates (map (getAlphabetChar) transitions)
+getSigma transitions = trace ("somtututututu") removeDuplicates (map (getAlphabetChar) transitions)
