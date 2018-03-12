@@ -30,7 +30,7 @@ data CellTransition = CellTransition
 updateTransitions :: State -> [String] -> [Transition] -> State -> [Transition]
 updateTransitions sinkState sigma delta currentState = do
 	let transitionsWithSameStartState = filter (\x -> from x == currentState) delta
-	if (listnumber transitionsWithSameStartState /= listnumber sigma) then do
+	if (listnumber (removeDuplicates transitionsWithSameStartState) /= listnumber sigma) then do
 		let sigmas = map (\x -> value x) transitionsWithSameStartState
 		let missingSigma = sigma \\ sigmas
 		let missingTransitions = map (\x -> Transition { from = currentState, to = sinkState, value = x }) missingSigma
@@ -41,12 +41,13 @@ updateTransitions sinkState sigma delta currentState = do
 updateAutomat :: Automat -> Automat
 updateAutomat automat = do
 	let checkingStatePredicate = updateTransitions ((listnumber (states automat)) + 1) (sigma automat) (delta automat)
-	let updatedTransitions = concat (map (\x -> checkingStatePredicate x) (states automat))
-	if (updatedTransitions /= delta automat) then do
+	let updatedTransitions = map (\x -> checkingStatePredicate x) (states automat)
+	let concatUpdatedTransitions = concat (removeDuplicates (updatedTransitions))
+	if (concatUpdatedTransitions /= delta automat) then do
 		let newState = listnumber (states automat) + 1
 		let newTransitions = map (\x -> Transition { from = newState, to = newState, value = x } ) (sigma automat)
-		Automat { states = states automat ++ [newState], sigma = sigma automat, delta = updatedTransitions ++ newTransitions, initialState = initialState automat, endStates = endStates automat }
-	else Automat { states = states automat, sigma = sigma automat, delta = updatedTransitions, initialState = initialState automat, endStates = endStates automat }
+		Automat { states = states automat ++ [newState], sigma = sigma automat, delta = concatUpdatedTransitions ++ newTransitions, initialState = initialState automat, endStates = endStates automat }
+	else Automat { states = states automat, sigma = sigma automat, delta = concatUpdatedTransitions, initialState = initialState automat, endStates = endStates automat }
 
 ------------------------------------------------------------
 
