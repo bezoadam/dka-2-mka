@@ -28,3 +28,7 @@ ktorej lezi koncovy stav prechodu.
 Po nainicializovani prvotnych ekvivalencnych tried sa zacne rekurzivne prechadzat kazda ekv. trieda a zistuje sa zda sa musi rozdelit. Rozdelenie spociva v tom, ze z danej ekv. triedy
 sa odstrania tie stavy ktore sa presuvaju do novej ekv. triedy a nova ekv. trieda sa prida na koniec listu ekv. tried. Po rozdeleni je nutne znovu prepocitat hodnoty `CellTransition` (buniek tabulky).
 Funkcia sa rekurzivne vola az pokedy uz nie je co rozdelovat.
+
+## 11/12
+Komentář učitele k hodnocení:
+Funguje; poněkud neelegantní kód (hlint)
